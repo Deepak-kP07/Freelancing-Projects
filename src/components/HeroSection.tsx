@@ -8,7 +8,7 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
         <div className="text-center md:text-left">
           <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-6 leading-tight">
-            Pure Water, <span className="text-accent">Pure Life</span> with Ozonxt Aqua Hub
+            Pure Water, <span className="text-accent">Pure Life</span> with Ozonxt
           </h2>
           <p className="text-lg text-foreground/80 mb-8">
             Your trusted partner for advanced water purification systems and services. Experience the difference with our cutting-edge ozone technology.
@@ -22,14 +22,14 @@ export default function HeroSection() {
             </Link>
           </div>
         </div>
-        <div className="relative h-64 md:h-96 rounded-lg overflow-hidden shadow-2xl">
+        <div className="relative h-64 md:h-96 rounded-lg overflow-hidden shadow-2xl group">
            <Image 
             src="https://placehold.co/800x600.png" 
-            alt="Clean water splash" 
+            alt="Clean water stream" 
             layout="fill"
             objectFit="cover"
-            data-ai-hint="water splash"
-            className="transform hover:scale-105 transition-transform duration-500"
+            data-ai-hint="purified water stream"
+            className="transform group-hover:scale-105 transition-transform duration-500"
           />
         </div>
       </div>

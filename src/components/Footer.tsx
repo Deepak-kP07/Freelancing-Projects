@@ -1,9 +1,52 @@
+import Link from 'next/link';
+import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, Droplets } from 'lucide-react';
+
 export default function Footer() {
   return (
-    <footer className="bg-muted/50 py-6 mt-12">
-      <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
-        <p>&copy; {new Date().getFullYear()} Ozonxt Aqua Hub. All rights reserved.</p>
-        <p className="mt-1">Your Partner in Pure Water Solutions.</p>
+    <footer className="bg-muted/60 dark:bg-muted/30 py-10 mt-16 border-t">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div>
+            <Link href="/" className="flex items-center gap-2 text-primary mb-3">
+              <Droplets size={28} />
+              <h3 className="text-xl font-headline font-semibold text-foreground">Ozonxt</h3>
+            </Link>
+            <p className="text-sm text-muted-foreground">Your Partner in Pure Water Solutions. Innovating for a healthier tomorrow.</p>
+          </div>
+          
+          <div>
+            <h4 className="text-md font-headline font-semibold text-foreground mb-4">Quick Links</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">Products</Link></li>
+              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">Services</Link></li>
+              <li><Link href="/cart" className="text-muted-foreground hover:text-primary transition-colors">Cart</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-md font-headline font-semibold text-foreground mb-4">Contact Info</h4>
+            <address className="space-y-2 text-sm not-italic text-muted-foreground">
+              <p className="flex items-start"><MapPin size={16} className="mr-2 mt-1 shrink-0 text-primary" />123 Aqua Street, Pureville, CleanState 560001, India</p>
+              <p className="flex items-center"><Phone size={16} className="mr-2 shrink-0 text-primary" /><a href="tel:+911234567890" className="hover:text-primary transition-colors">+91 123 456 7890</a></p>
+              <p className="flex items-center"><Mail size={16} className="mr-2 shrink-0 text-primary" /><a href="mailto:info@ozonxt.com" className="hover:text-primary transition-colors">info@ozonxt.com</a></p>
+            </address>
+          </div>
+          
+          <div>
+            <h4 className="text-md font-headline font-semibold text-foreground mb-4">Follow Us</h4>
+            <div className="flex space-x-4">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors"><Facebook size={22} /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="text-muted-foreground hover:text-primary transition-colors"><Twitter size={22} /></a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={22} /></a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={22} /></a>
+            </div>
+          </div>
+        </div>
+        
+        <div className="border-t border-border pt-6 text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Ozonxt. All rights reserved.</p>
+        </div>
       </div>
     </footer>
   );

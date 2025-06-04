@@ -5,7 +5,7 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
-interface CartState {
+export interface CartState { // Exporting CartState
   items: CartItem[];
 }
 
@@ -15,7 +15,7 @@ const initialState: CartState = {
 
 const cartSlice = createSlice({
   name: 'cart',
-  initialState,
+  initialState, // This will be overridden by preloadedState from localStorage if available
   reducers: {
     addItem: (state, action: PayloadAction<Product>) => {
       const existingItem = state.items.find(item => item.id === action.payload.id);
@@ -31,15 +31,22 @@ const cartSlice = createSlice({
     updateQuantity: (state, action: PayloadAction<{ id: string; quantity: number }>) => {
       const item = state.items.find(item => item.id === action.payload.id);
       if (item) {
-        item.quantity = action.payload.quantity;
-        if (item.quantity <= 0) {
+        if (action.payload.quantity <= 0) {
+           // If quantity is 0 or less, remove the item
           state.items = state.items.filter(i => i.id !== action.payload.id);
+        } else {
+          item.quantity = action.payload.quantity;
         }
       }
     },
     clearCart: (state) => {
       state.items = [];
     },
+    // Potentially, a reducer to fully replace cart state if needed for hydration from localStorage,
+    // but usually preloadedState in configureStore handles this.
+    // setCartState: (state, action: PayloadAction<CartItem[]>) => {
+    //   state.items = action.payload;
+    // }
   },
 });
 

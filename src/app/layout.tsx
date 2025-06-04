@@ -3,12 +3,13 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import ReduxProvider from '@/components/providers/ReduxProvider';
 import AuthProvider from '@/components/providers/AuthProvider';
+import ThemeProvider from '@/components/providers/ThemeProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Ozonxt Aqua Hub',
-  description: 'Pure Water, Pure Life with Ozonxt Aqua Hub',
+  title: 'Ozonxt',
+  description: 'Pure Water, Pure Life with Ozonxt',
 };
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -26,12 +27,19 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen">
         <ReduxProvider>
           <AuthProvider>
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <Footer />
-            <Toaster />
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <Header />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+            </ThemeProvider>
           </AuthProvider>
         </ReduxProvider>
       </body>

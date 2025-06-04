@@ -15,9 +15,9 @@ export const PRODUCTS: Product[] = [
     id: '1',
     name: 'Ozonxt Home Purifier X100',
     description: 'Advanced multi-stage home water purifier with ozone disinfection. Ideal for families.',
-    price: 299.99,
+    price: 299.99, // Assuming direct symbol swap, actual value might need conversion
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'water purifier',
+    dataAiHint: 'home water filter',
     category: 'Home Purifiers',
   },
   {
@@ -26,7 +26,7 @@ export const PRODUCTS: Product[] = [
     description: 'High-capacity water purification system for commercial use. Ensures safe water for your business.',
     price: 1299.99,
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'industrial purifier',
+    dataAiHint: 'large water purifier',
     category: 'Commercial Purifiers',
   },
   {
@@ -35,7 +35,7 @@ export const PRODUCTS: Product[] = [
     description: 'Purifying water bottle with built-in ozone tech. Clean water on the go.',
     price: 79.99,
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'water bottle',
+    dataAiHint: 'filter water bottle',
     category: 'Accessories',
   },
   {
@@ -44,7 +44,7 @@ export const PRODUCTS: Product[] = [
     description: 'Pack of 3 replacement filters for Ozonxt Home Purifier X100.',
     price: 49.99,
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'filter cartridge',
+    dataAiHint: 'water filter cartridges',
     category: 'Accessories',
   },
   {
@@ -53,7 +53,7 @@ export const PRODUCTS: Product[] = [
     description: 'Enjoy ozonated, pure water in your shower. Reduces chlorine and impurities.',
     price: 89.99,
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'shower filter',
+    dataAiHint: 'shower head filter',
     category: 'Home Purifiers',
   },
   {
@@ -62,7 +62,7 @@ export const PRODUCTS: Product[] = [
     description: 'Powerful ozone generator for large-scale water treatment and sanitation.',
     price: 2500.00,
     imageUrl: 'https://placehold.co/600x400.png',
-    dataAiHint: 'ozone generator',
+    dataAiHint: 'industrial ozone machine',
     category: 'Commercial Purifiers',
   },
 ];
@@ -83,7 +83,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: 'Homeowner',
     text: "Since installing the Ozonxt Home Purifier, my family's drinking water has never tasted better. The peace of mind is priceless!",
     avatarUrl: 'https://placehold.co/100x100.png',
-    dataAiHint: 'happy person',
+    dataAiHint: 'happy woman',
   },
   {
     id: '2',
@@ -91,7 +91,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: 'Restaurant Owner',
     text: 'The Ozonxt Commercial Purifier is a game-changer for my restaurant. Our customers notice the difference in water quality.',
     avatarUrl: 'https://placehold.co/100x100.png',
-    dataAiHint: 'smiling chef',
+    dataAiHint: 'male chef',
   },
   {
     id: '3',
@@ -99,7 +99,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: 'Fitness Enthusiast',
     text: "I love my Ozonxt Portable Bottle! It's perfect for the gym and ensures I have clean water wherever I go.",
     avatarUrl: 'https://placehold.co/100x100.png',
-    dataAiHint: 'active woman',
+    dataAiHint: 'sporty woman',
   },
 ];
 
