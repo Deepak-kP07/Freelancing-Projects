@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 
 export default function AboutPage() {
@@ -19,7 +20,7 @@ export default function AboutPage() {
               alt="Team working on water solutions"
               layout="fill"
               objectFit="cover"
-              data-ai-hint="water technology lab"
+              data-ai-hint="water lab"
             />
           </div>
         </div>

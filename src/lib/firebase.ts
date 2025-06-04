@@ -1,43 +1,41 @@
+// src/lib/firebase.ts
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 // import { getFirestore } from 'firebase/firestore'; // Uncomment if you use Firestore
 
-const PLACEHOLDER_API_KEY = "YOUR_API_KEY"; // This is a constant for comparison
-
-// Log all relevant environment variables to help debug what the application sees
-console.log('[DEBUG] Firebase Environment Variables Check:');
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_API_KEY:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_PROJECT_ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:', process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID);
-console.log('[DEBUG] NEXT_PUBLIC_FIREBASE_APP_ID:', process.env.NEXT_PUBLIC_FIREBASE_APP_ID);
-
-// Your web app's Firebase configuration
-// IMPORTANT: These should be loaded from your .env.local file
+// Construct Firebase configuration object from environment variables
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || PLACEHOLDER_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "YOUR_APP_ID",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Check if the API key resolved to the placeholder, meaning it was not found or incorrect in env
-if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfig.apiKey === PLACEHOLDER_API_KEY) {
+// Optional: Add debug logs here if you still face issues after restarting
+// console.log('[NEW firebase.ts] Loaded API Key:', firebaseConfig.apiKey);
+
+// Check if the essential API key is configured through environment variables
+if (!firebaseConfig.apiKey) {
+  console.error('[DEBUG] Firebase config from env:', firebaseConfig); // Log the whole config
   throw new Error(
-    "Firebase API Key is not configured correctly. " +
-    "Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your .env.local file (in the project root directory). " +
-    "The value received from the environment was: '" + process.env.NEXT_PUBLIC_FIREBASE_API_KEY + "'. " +
-    "You MUST restart your development server after creating or modifying the .env.local file. " +
-    "You can find the correct API key in your Firebase project settings."
+    "Firebase API Key is not configured OR IS UNDEFINED. " +
+    "Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is correctly set in your .env.local file (in the project root directory) " +
+    "AND that you have RESTARTED your Next.js development server."
   );
 }
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+let app: FirebaseApp;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp(); // Use the existing app if already initialized
+}
+
 const auth = getAuth(app);
 // const db = getFirestore(app); // Uncomment if you use Firestore
 const googleProvider = new GoogleAuthProvider();

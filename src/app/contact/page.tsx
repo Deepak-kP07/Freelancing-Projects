@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,7 +94,7 @@ export default function ContactPage() {
           <img 
             src="https://placehold.co/1200x400.png" 
             alt="Map showing Ozonxt location" 
-            data-ai-hint="office location map detailed" 
+            data-ai-hint="office map" 
             className="w-full h-full object-cover" 
           />
         </div>
