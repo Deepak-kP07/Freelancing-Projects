@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useEffect, useActionState } from 'react';
+import { useEffect } from 'react';
+import { useActionState } from 'react'; // Corrected import
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -79,6 +80,7 @@ export default function ServiceBookingForm() {
     }
   }, [state, toast, form]);
 
+  const watchedPreferredDate = form.watch('preferredDate');
 
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
@@ -111,7 +113,7 @@ export default function ServiceBookingForm() {
             <Select
               onValueChange={(value) => form.setValue('serviceType', value, { shouldValidate: true })}
               defaultValue={form.getValues('serviceType')}
-              name="serviceType"
+              name="serviceType" // Ensure name is passed for FormData
             >
               <SelectTrigger className={cn(form.formState.errors.serviceType || state?.errors?.serviceType ? 'border-destructive' : '')}>
                 <SelectValue placeholder="Select a service" />
@@ -133,25 +135,31 @@ export default function ServiceBookingForm() {
                   variant="outline"
                   className={cn(
                     'w-full justify-start text-left font-normal',
-                    !form.watch('preferredDate') && 'text-muted-foreground',
+                    !watchedPreferredDate && 'text-muted-foreground',
                     (form.formState.errors.preferredDate || state?.errors?.preferredDate) && 'border-destructive'
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {form.watch('preferredDate') ? format(form.watch('preferredDate')!, 'PPP') : <span>Pick a date</span>}
+                  {watchedPreferredDate ? format(watchedPreferredDate, 'PPP') : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={form.watch('preferredDate')}
+                  selected={watchedPreferredDate}
                   onSelect={(date) => form.setValue('preferredDate', date || new Date(), {shouldValidate: true})}
                   initialFocus
                   disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Disable past dates
                 />
               </PopoverContent>
             </Popover>
-            <input type="hidden" {...form.register('preferredDate')} value={form.watch('preferredDate')?.toISOString() || ''} />
+            {/* This hidden input ensures the date is part of FormData for the server action */}
+            {/* It does NOT use form.register to avoid conflict with RHF's internal Date object state */}
+            <input
+              type="hidden"
+              name="preferredDate"
+              value={watchedPreferredDate instanceof Date ? watchedPreferredDate.toISOString() : ''}
+            />
             {(form.formState.errors.preferredDate || state?.errors?.preferredDate) && <p className="text-sm text-destructive mt-1">{form.formState.errors.preferredDate?.message || state?.errors?.preferredDate?.[0]}</p>}
           </div>
 
@@ -167,3 +175,4 @@ export default function ServiceBookingForm() {
     </Card>
   );
 }
+
