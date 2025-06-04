@@ -1,7 +1,8 @@
+
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,7 +43,7 @@ function SubmitButton() {
 
 export default function ServiceBookingForm() {
   const { toast } = useToast();
-  const [state, formAction] = useFormState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
+  const [state, formAction] = useActionState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -64,7 +65,7 @@ export default function ServiceBookingForm() {
         variant: state.success ? 'default' : 'destructive',
       });
       if (state.success) {
-        form.reset(); 
+        form.reset();
       }
     }
     if (state?.errors) {
@@ -104,10 +105,10 @@ export default function ServiceBookingForm() {
             <Input id="phone" type="tel" {...form.register('phone')} className={form.formState.errors.phone || state?.errors?.phone ? 'border-destructive' : ''}/>
             {(form.formState.errors.phone || state?.errors?.phone) && <p className="text-sm text-destructive mt-1">{form.formState.errors.phone?.message || state?.errors?.phone?.[0]}</p>}
           </div>
-          
+
           <div>
             <Label htmlFor="serviceType">Service Type</Label>
-            <Select 
+            <Select
               onValueChange={(value) => form.setValue('serviceType', value, { shouldValidate: true })}
               defaultValue={form.getValues('serviceType')}
               name="serviceType"
@@ -159,7 +160,7 @@ export default function ServiceBookingForm() {
             <Input id="preferredTime" type="time" {...form.register('preferredTime')} className={form.formState.errors.preferredTime || state?.errors?.preferredTime ? 'border-destructive' : ''}/>
             {(form.formState.errors.preferredTime || state?.errors?.preferredTime) && <p className="text-sm text-destructive mt-1">{form.formState.errors.preferredTime?.message || state?.errors?.preferredTime?.[0]}</p>}
           </div>
-          
+
           <SubmitButton />
         </form>
       </CardContent>
