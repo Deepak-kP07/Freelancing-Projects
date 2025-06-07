@@ -38,11 +38,11 @@ export default function CartPage() {
       return;
     }
 
-    let message = "Hello Ozonxt, I'd like to order the following items:\\n\\n";
+    let message = "Hello Ozonxt, I'd like to order the following items:\n\n";
     cartItems.forEach(item => {
-      message += `${item.name} (x${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}\\n`;
+      message += `${item.name} (x${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}\n`;
     });
-    message += `\\nTotal: ₹${totalAmount.toFixed(2)}\\n\\n`;
+    message += `\nTotal: ₹${totalAmount.toFixed(2)}\n\n`;
     message += "Please let me know the next steps. Thank you!";
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
