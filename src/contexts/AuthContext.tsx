@@ -48,63 +48,93 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         dispatch(clearUser());
       }
-      dispatch(setAuthLoading(false));
+      // setAuthLoading(false) is handled by setUser and clearUser reducers
     });
     return () => unsubscribe();
   }, [dispatch]);
 
   const handleAuthError = (error: unknown) => {
     const authError = error as AuthError;
-    console.error("Firebase Auth Error: ", authError.message);
-    dispatch(setAuthError(authError.message || 'An unknown authentication error occurred.'));
+    console.error("Firebase Auth Error Code:", authError.code, "Message:", authError.message, "Full Error:", authError);
+    
+    let friendlyMessage = 'An unknown authentication error occurred. Please try again.';
+    switch (authError.code) {
+      case 'auth/email-already-in-use':
+        friendlyMessage = 'This email address is already registered. Please try logging in or use a different email.';
+        break;
+      case 'auth/invalid-email':
+        friendlyMessage = 'The email address is not valid. Please check and try again.';
+        break;
+      case 'auth/weak-password':
+        friendlyMessage = 'The password is too weak. It must be at least 6 characters long.';
+        break;
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        friendlyMessage = 'Invalid email or password. Please check your credentials.';
+        break;
+      case 'auth/requires-recent-login':
+        friendlyMessage = 'This operation is sensitive and requires recent authentication. Please log in again before retrying.';
+        break;
+      case 'auth/popup-closed-by-user':
+        friendlyMessage = 'Google Sign-In popup was closed before completion. Please try again.';
+        // For this specific case, we might not want to show a persistent error if the user intentionally closed it.
+        // dispatch(setAuthLoading(false)); // Ensure loading is false
+        // return null; 
+        // For now, we'll dispatch the error like others.
+        break;
+      case 'auth/cancelled-popup-request':
+      case 'auth/popup-blocked':
+        friendlyMessage = 'Google Sign-In popup was blocked or cancelled. Please ensure popups are enabled for this site and try again.';
+        break;
+    }
+    dispatch(setAuthError(friendlyMessage)); // This will also set loading to false in the slice
     return null;
   }
 
   const signInWithGoogle = async (): Promise<User | null> => {
     dispatch(setAuthLoading(true));
+    dispatch(setAuthError(null)); // Clear previous errors
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will dispatch setUser
-      dispatch(setAuthLoading(false)); // Explicitly set loading false
+      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
       return result.user;
     } catch (error) {
-      return handleAuthError(error);
+      return handleAuthError(error); // This will set loading to false via setAuthError
     }
   };
 
   const signInUserWithEmail = async (email: string, pass: string): Promise<User | null> => {
     dispatch(setAuthLoading(true));
+    dispatch(setAuthError(null)); // Clear previous errors
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will dispatch setUser
-      dispatch(setAuthLoading(false));
+      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
       return userCredential.user;
     } catch (error) {
-      return handleAuthError(error);
+      return handleAuthError(error); // This will set loading to false via setAuthError
     }
   };
 
   const signUpUserWithEmail = async (email: string, pass: string): Promise<User | null> => {
     dispatch(setAuthLoading(true));
+    dispatch(setAuthError(null)); // Clear previous errors
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will dispatch setUser
-      dispatch(setAuthLoading(false));
+      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
       return userCredential.user;
     } catch (error) {
-      return handleAuthError(error);
+      return handleAuthError(error); // This will set loading to false via setAuthError
     }
   };
 
   const signOutUser = async () => {
     dispatch(setAuthLoading(true));
+    dispatch(setAuthError(null)); // Clear previous errors
     try {
       await signOut(auth);
-      // onAuthStateChanged will dispatch clearUser
+      // onAuthStateChanged will dispatch clearUser and setAuthLoading(false) via clearUser
     } catch (error) {
-      handleAuthError(error); // Dispatch error, though onAuthStateChanged should still clear user
-    } finally {
-       // dispatch(setAuthLoading(false)); // onAuthStateChanged will handle this
+      handleAuthError(error); // This will set loading to false via setAuthError
     }
   };
 
