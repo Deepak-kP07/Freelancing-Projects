@@ -68,10 +68,12 @@ export async function bookServiceAction(
         success: false,
       };
     }
+    
+    const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates a 4-digit number (1000-9999)
 
     const newBooking: ServerBooking = {
       ...validatedFields.data,
-      id: `OZB-${crypto.randomUUID().substring(0, 8).toUpperCase()}`, // Meaningful Booking ID
+      id: `OZ${randomNumber}`, // Meaningful Booking ID: OZNNNN
       userEmail: validatedFields.data.email, 
       status: SERVICE_STATUSES[0], 
       bookedAt: new Date(),
