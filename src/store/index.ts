@@ -1,10 +1,13 @@
+
 import { configureStore } from '@reduxjs/toolkit';
-import cartReducer, { type CartState } from './cartSlice'; // Ensure CartState is exported from cartSlice or define it here
+import cartReducer, { type CartState } from './cartSlice';
+import authReducer, { type AuthState } from './authSlice'; // Import new auth reducer and state
 
 const CART_STATE_KEY = 'ozonxtCartState';
+// const AUTH_STATE_KEY = 'ozonxtAuthState'; // Optional: if you want to persist auth state
 
 // Function to load state from localStorage
-const loadState = (): { cart: CartState } | undefined => {
+const loadCartState = (): { cart: CartState } | undefined => {
   try {
     if (typeof window === 'undefined') {
       return undefined; // Don't run on server
@@ -22,7 +25,7 @@ const loadState = (): { cart: CartState } | undefined => {
 };
 
 // Function to save state to localStorage
-const saveState = (state: { cart: CartState }) => {
+const saveCartState = (state: { cart: CartState }) => {
   try {
     if (typeof window === 'undefined') {
       return; // Don't run on server
@@ -34,24 +37,33 @@ const saveState = (state: { cart: CartState }) => {
   }
 };
 
-const preloadedState = loadState();
+const preloadedCartState = loadCartState();
 
 export const store = configureStore({
   reducer: {
     cart: cartReducer,
+    auth: authReducer, // Add auth reducer
   },
-  preloadedState,
+  preloadedState: preloadedCartState, // Only preloading cart state for now
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types, or customize the check for User object
+        ignoredActions: ['auth/setUser'],
+        // Or, customize the check for specific paths
+        ignoredPaths: ['auth.user'],
+      },
+    }),
 });
 
-// Subscribe to store changes to save state
-// Debounce this if performance becomes an issue with frequent updates
-let saveTimeout: NodeJS.Timeout | null = null;
+// Subscribe to store changes to save cart state
+let saveCartTimeout: NodeJS.Timeout | null = null;
 store.subscribe(() => {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
+  if (saveCartTimeout) {
+    clearTimeout(saveCartTimeout);
   }
-  saveTimeout = setTimeout(() => {
-    saveState({ cart: store.getState().cart });
+  saveCartTimeout = setTimeout(() => {
+    saveCartState({ cart: store.getState().cart });
   }, 500); // Debounce to save at most every 500ms
 });
 
