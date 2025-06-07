@@ -70,6 +70,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         break;
       case 'auth/user-not-found':
       case 'auth/wrong-password':
+      case 'auth/invalid-credential': // Added this case
         friendlyMessage = 'Invalid email or password. Please check your credentials.';
         break;
       case 'auth/requires-recent-login':
@@ -77,14 +78,13 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         break;
       case 'auth/popup-closed-by-user':
         friendlyMessage = 'Google Sign-In popup was closed before completion. Please try again.';
-        // For this specific case, we might not want to show a persistent error if the user intentionally closed it.
-        // dispatch(setAuthLoading(false)); // Ensure loading is false
-        // return null; 
-        // For now, we'll dispatch the error like others.
         break;
       case 'auth/cancelled-popup-request':
       case 'auth/popup-blocked':
         friendlyMessage = 'Google Sign-In popup was blocked or cancelled. Please ensure popups are enabled for this site and try again.';
+        break;
+      case 'auth/unauthorized-domain':
+        friendlyMessage = 'This domain is not authorized for Firebase operations. Please check your Firebase project settings.';
         break;
     }
     dispatch(setAuthError(friendlyMessage)); // This will also set loading to false in the slice
