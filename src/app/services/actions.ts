@@ -69,11 +69,12 @@ export async function bookServiceAction(
       };
     }
     
-    const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates a 4-digit number (1000-9999)
+    const randomNumber = Math.floor(Math.random() * 100000); // Generates a number from 0 to 99999
+    const paddedRandomNumber = String(randomNumber).padStart(5, '0'); // Pads with leading zeros to ensure 5 digits
 
     const newBooking: ServerBooking = {
       ...validatedFields.data,
-      id: `OZ${randomNumber}`, // Meaningful Booking ID: OZNNNN
+      id: `OZ${paddedRandomNumber}`, // Meaningful Booking ID: OZNNNNN
       userEmail: validatedFields.data.email, 
       status: SERVICE_STATUSES[0], 
       bookedAt: new Date(),
@@ -93,7 +94,7 @@ export async function bookServiceAction(
 
 async function isAdminCheck(userEmail: string | null | undefined): Promise<boolean> {
   if (!userEmail) return false;
-  // Check if userEmail is in the ADMIN_EMAIL array
+  // Check if userEmail is in the ADMIN_EMAIL array (which should be an array)
   return ADMIN_EMAIL.includes(userEmail);
 }
 
@@ -138,3 +139,4 @@ export async function updateBookingStatus(
 
   return { success: true, message: `Booking status updated to ${newStatus}.` };
 }
+
