@@ -112,7 +112,8 @@ export const SERVICE_TYPES = [
   'Water Quality Testing',
 ];
 
-export const ADMIN_EMAIL = 'admin@ozonxt.com'; // Replace with your actual admin email for testing
+// Changed ADMIN_EMAIL to an array of strings
+export const ADMIN_EMAIL = ['admin@ozonxt.com', 'deepakperumal09@gmail.com'];
 
 export const SERVICE_STATUSES = [
   'Pending Confirmation',

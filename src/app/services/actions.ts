@@ -71,9 +71,9 @@ export async function bookServiceAction(
 
     const newBooking: ServerBooking = {
       ...validatedFields.data,
-      id: crypto.randomUUID(), // Generate a unique ID
-      userEmail: validatedFields.data.email, // Associate with user's email
-      status: SERVICE_STATUSES[0], // Initial status
+      id: `OZB-${crypto.randomUUID().substring(0, 8).toUpperCase()}`, // Meaningful Booking ID
+      userEmail: validatedFields.data.email, 
+      status: SERVICE_STATUSES[0], 
       bookedAt: new Date(),
     };
 
@@ -89,33 +89,26 @@ export async function bookServiceAction(
   }
 }
 
-// Helper to simulate checking if the current user is an admin
-// This is a placeholder and not secure for production.
-// In a real app, you'd verify this on the server using a secure method (e.g., custom claims).
 async function isAdminCheck(userEmail: string | null | undefined): Promise<boolean> {
   if (!userEmail) return false;
-  return userEmail === ADMIN_EMAIL;
+  // Check if userEmail is in the ADMIN_EMAIL array
+  return ADMIN_EMAIL.includes(userEmail);
 }
 
 
 export async function getUserBookings(userEmail: string): Promise<ServerBooking[]> {
-  // In a real app, this would query a database like Firestore:
-  // const userBookings = await db.collection('bookings').where('userEmail', '==', userEmail).get();
-  // For prototype, filter the in-memory array
   console.log(`Fetching bookings for email: ${userEmail}`);
   const bookings = serverBookings.filter(booking => booking.userEmail === userEmail);
   console.log(`Found bookings for ${userEmail}:`, bookings);
-  return JSON.parse(JSON.stringify(bookings)); // Ensure plain objects are returned
+  return JSON.parse(JSON.stringify(bookings)); 
 }
 
 export async function getAllBookings(currentUserEmail: string | null | undefined): Promise<ServerBooking[] | { error: string }> {
   if (!await isAdminCheck(currentUserEmail)) {
     return { error: "Unauthorized: You do not have permission to view all bookings." };
   }
-  // In a real app, this would fetch all bookings from the database.
-  // For prototype, return the in-memory array
   console.log('Admin fetching all bookings:', serverBookings);
-  return JSON.parse(JSON.stringify(serverBookings)); // Ensure plain objects are returned
+  return JSON.parse(JSON.stringify(serverBookings)); 
 }
 
 export async function updateBookingStatus(
@@ -140,7 +133,6 @@ export async function updateBookingStatus(
   serverBookings[bookingIndex].status = newStatus;
   console.log(`Admin updated booking ${bookingId} to status ${newStatus}`);
   console.log('Current serverBookings:', serverBookings);
-
 
   return { success: true, message: `Booking status updated to ${newStatus}.` };
 }
