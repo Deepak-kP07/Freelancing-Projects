@@ -31,6 +31,7 @@ export type ServerBooking = BookingFormData & {
 
 // In-memory store for bookings (for prototype purposes) - NOT EXPORTED
 let serverBookings: ServerBooking[] = [];
+let bookingIdCounter = 0; // Counter for sequential booking IDs
 
 export interface BookingFormState {
   message: string | null;
@@ -69,12 +70,12 @@ export async function bookServiceAction(
       };
     }
     
-    const randomNumber = Math.floor(Math.random() * 10000); // Generates a number from 0 to 9999
-    const paddedRandomNumber = String(randomNumber).padStart(4, '0'); // Pads with leading zeros to ensure 4 digits
+    bookingIdCounter++;
+    const formattedCounter = String(bookingIdCounter).padStart(4, '0');
 
     const newBooking: ServerBooking = {
       ...validatedFields.data,
-      id: `OZN${paddedRandomNumber}`, // Booking ID format: OZNXXXX
+      id: `OZN${formattedCounter}`, // Booking ID format: OZNXXXX
       userEmail: validatedFields.data.email, 
       status: SERVICE_STATUSES[0], 
       bookedAt: new Date(),
@@ -94,7 +95,7 @@ export async function bookServiceAction(
 
 async function isAdminCheck(userEmail: string | null | undefined): Promise<boolean> {
   if (!userEmail) return false;
-  // Check if userEmail is in the ADMIN_EMAIL array (which should be an array)
+  // Check if userEmail is in the ADMIN_EMAIL array
   return ADMIN_EMAIL.includes(userEmail);
 }
 
@@ -103,6 +104,7 @@ export async function getUserBookings(userEmail: string): Promise<ServerBooking[
   console.log(`Fetching bookings for email: ${userEmail}`);
   const bookings = serverBookings.filter(booking => booking.userEmail === userEmail);
   console.log(`Found bookings for ${userEmail}:`, bookings);
+  // Return a deep copy to avoid issues with RSC and client components if objects are mutated
   return JSON.parse(JSON.stringify(bookings)); 
 }
 
@@ -111,6 +113,7 @@ export async function getAllBookings(currentUserEmail: string | null | undefined
     return { error: "Unauthorized: You do not have permission to view all bookings." };
   }
   console.log('Admin fetching all bookings:', serverBookings);
+  // Return a deep copy
   return JSON.parse(JSON.stringify(serverBookings)); 
 }
 
@@ -139,4 +142,3 @@ export async function updateBookingStatus(
 
   return { success: true, message: `Booking status updated to ${newStatus}.` };
 }
-
