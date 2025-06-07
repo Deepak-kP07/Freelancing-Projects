@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -34,9 +35,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={product.imageUrl}
             alt={product.name}
             layout="fill"
-            objectFit="cover"
             data-ai-hint={product.dataAiHint}
-            className="transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
       </CardHeader>

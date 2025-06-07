@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -27,9 +28,8 @@ export default function HeroSection() {
             src="https://placehold.co/800x600.png" 
             alt="Clean water stream" 
             layout="fill"
-            objectFit="cover"
             data-ai-hint="purified water stream"
-            className="transform group-hover:scale-105 transition-transform duration-500"
+            className="object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
         </div>
       </div>
