@@ -69,12 +69,12 @@ export async function bookServiceAction(
       };
     }
     
-    const randomNumber = Math.floor(Math.random() * 100000); // Generates a number from 0 to 99999
-    const paddedRandomNumber = String(randomNumber).padStart(5, '0'); // Pads with leading zeros to ensure 5 digits
+    const randomNumber = Math.floor(Math.random() * 10000); // Generates a number from 0 to 9999
+    const paddedRandomNumber = String(randomNumber).padStart(4, '0'); // Pads with leading zeros to ensure 4 digits
 
     const newBooking: ServerBooking = {
       ...validatedFields.data,
-      id: `OZ${paddedRandomNumber}`, // Meaningful Booking ID: OZNNNNN
+      id: `OZN${paddedRandomNumber}`, // Booking ID format: OZNXXXX
       userEmail: validatedFields.data.email, 
       status: SERVICE_STATUSES[0], 
       bookedAt: new Date(),
