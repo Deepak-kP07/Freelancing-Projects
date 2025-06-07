@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getAllBookings, updateBookingStatus } from '@/app/dashboard/actions';
+import { getAllBookings, updateBookingStatus } from '@/app/services/actions'; // Updated import path
 import type { ServerBooking } from '@/app/services/actions';
 import { ADMIN_EMAIL, SERVICE_STATUSES } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -180,4 +180,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getUserBookings } from '@/app/dashboard/actions';
+import { getUserBookings } from '@/app/services/actions'; // Updated import path
 import type { ServerBooking } from '@/app/services/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

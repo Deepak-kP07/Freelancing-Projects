@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { SERVICE_STATUSES } from '@/lib/constants';
+import { ADMIN_EMAIL, SERVICE_STATUSES } from '@/lib/constants';
 
 // Ensure date is parsed correctly
 const preprocessDate = (arg: unknown) => {
@@ -29,10 +29,8 @@ export type ServerBooking = BookingFormData & {
   bookedAt: Date;
 };
 
-// In-memory store for bookings (for prototype purposes)
-// This will be reset every time the server restarts.
-// In a real app, use a database like Firestore.
-export let serverBookings: ServerBooking[] = [];
+// In-memory store for bookings (for prototype purposes) - NOT EXPORTED
+let serverBookings: ServerBooking[] = [];
 
 export interface BookingFormState {
   message: string | null;
@@ -89,4 +87,60 @@ export async function bookServiceAction(
     console.error('Service booking error:', error);
     return { message: 'An unexpected error occurred. Please try again later.', success: false };
   }
+}
+
+// Helper to simulate checking if the current user is an admin
+// This is a placeholder and not secure for production.
+// In a real app, you'd verify this on the server using a secure method (e.g., custom claims).
+async function isAdminCheck(userEmail: string | null | undefined): Promise<boolean> {
+  if (!userEmail) return false;
+  return userEmail === ADMIN_EMAIL;
+}
+
+
+export async function getUserBookings(userEmail: string): Promise<ServerBooking[]> {
+  // In a real app, this would query a database like Firestore:
+  // const userBookings = await db.collection('bookings').where('userEmail', '==', userEmail).get();
+  // For prototype, filter the in-memory array
+  console.log(`Fetching bookings for email: ${userEmail}`);
+  const bookings = serverBookings.filter(booking => booking.userEmail === userEmail);
+  console.log(`Found bookings for ${userEmail}:`, bookings);
+  return JSON.parse(JSON.stringify(bookings)); // Ensure plain objects are returned
+}
+
+export async function getAllBookings(currentUserEmail: string | null | undefined): Promise<ServerBooking[] | { error: string }> {
+  if (!await isAdminCheck(currentUserEmail)) {
+    return { error: "Unauthorized: You do not have permission to view all bookings." };
+  }
+  // In a real app, this would fetch all bookings from the database.
+  // For prototype, return the in-memory array
+  console.log('Admin fetching all bookings:', serverBookings);
+  return JSON.parse(JSON.stringify(serverBookings)); // Ensure plain objects are returned
+}
+
+export async function updateBookingStatus(
+  bookingId: string,
+  newStatus: string,
+  currentUserEmail: string | null | undefined
+): Promise<{ success: boolean; message: string }> {
+  if (!await isAdminCheck(currentUserEmail)) {
+    return { success: false, message: "Unauthorized: You do not have permission to update booking status." };
+  }
+
+  if (!SERVICE_STATUSES.includes(newStatus)) {
+    return { success: false, message: "Invalid status value." };
+  }
+
+  const bookingIndex = serverBookings.findIndex(booking => booking.id === bookingId);
+
+  if (bookingIndex === -1) {
+    return { success: false, message: "Booking not found." };
+  }
+
+  serverBookings[bookingIndex].status = newStatus;
+  console.log(`Admin updated booking ${bookingId} to status ${newStatus}`);
+  console.log('Current serverBookings:', serverBookings);
+
+
+  return { success: true, message: `Booking status updated to ${newStatus}.` };
 }

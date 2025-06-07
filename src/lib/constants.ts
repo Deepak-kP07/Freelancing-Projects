@@ -1,5 +1,5 @@
 
-export const WHATSAPP_PHONE_NUMBER = '+919581172082'; // Replace with actual number, including country code without + or 00
+export const WHATSAPP_PHONE_NUMBER = '+91 95420 48217'; // Replace with actual number, including country code without + or 00
 
 export interface Product {
   id: string;
