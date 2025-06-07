@@ -24,13 +24,14 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const isAdmin = authUser?.email === ADMIN_EMAIL;
+  const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
   const fetchBookings = async () => {
     if (!isAdmin) return;
     setIsLoading(true);
     setError(null);
     try {
+      // Pass the current user's email to getAllBookings for the server-side admin check
       const result = await getAllBookings(authUser?.email);
       if ('error' in result) {
         setError(result.error);
@@ -54,10 +55,11 @@ export default function AdminDashboardPage() {
       setIsLoading(false);
       setError("Access Denied: You do not have permission to view this page.");
     }
-  }, [authLoading, isAdmin, authUser]);
+  }, [authLoading, isAdmin, authUser]); // authUser added as dependency for fetchBookings call
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
+      // Pass the current user's email to updateBookingStatus for the server-side admin check
       const result = await updateBookingStatus(bookingId, newStatus, authUser?.email);
       toast({
         title: result.success ? 'Status Updated' : 'Update Failed',
@@ -88,7 +90,7 @@ export default function AdminDashboardPage() {
  };
 
 
-  if (authLoading || (isAdmin && isLoading && bookings.length === 0)) { // Show loader if admin is loading initial data
+  if (authLoading || (isAdmin && isLoading && bookings.length === 0 && !error)) { // Show loader if admin is loading initial data and no error yet
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
@@ -123,7 +125,7 @@ export default function AdminDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading && bookings.length === 0 && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+          {isLoading && bookings.length === 0 && !error && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
           {error && !isLoading && <p className="text-destructive text-center py-4">{error}</p>}
           {!isLoading && !error && bookings.length === 0 && (
             <p className="text-muted-foreground text-center py-10">No service bookings found.</p>

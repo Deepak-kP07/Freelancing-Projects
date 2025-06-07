@@ -1,5 +1,5 @@
 
-export const WHATSAPP_PHONE_NUMBER = '+91 95420 48217'; // Replace with actual number, including country code without + or 00
+export const WHATSAPP_PHONE_NUMBER = '+919581172082'; // Replace with actual number, including country code without + or 00
 
 export interface Product {
   id: string;
@@ -113,7 +113,7 @@ export const SERVICE_TYPES = [
 ];
 
 // Changed ADMIN_EMAIL to an array of strings
-export const ADMIN_EMAIL = ['admin@ozonxt.com', 'deepakperumal09@gmail.com'];
+export const ADMIN_EMAIL = ['admin@ozonxt.com','deepakperumal09@gmail.com'];
 
 export const SERVICE_STATUSES = [
   'Pending Confirmation',

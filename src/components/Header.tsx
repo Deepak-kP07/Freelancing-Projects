@@ -17,7 +17,7 @@ import { ADMIN_EMAIL } from '@/lib/constants';
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const authUser = useSelector((state: RootState) => state.auth.user);
-  const isAdmin = authUser?.email === ADMIN_EMAIL;
+  const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
