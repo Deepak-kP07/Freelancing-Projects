@@ -1,5 +1,5 @@
 
-export const WHATSAPP_PHONE_NUMBER = '+9195811720082'; // Replace with actual number, including country code without + or 00
+export const WHATSAPP_PHONE_NUMBER = '+919581172082'; // Replace with actual number, including country code without + or 00
 
 export interface Product {
   id: string;
@@ -110,4 +110,16 @@ export const SERVICE_TYPES = [
   'Repair',
   'Consultation',
   'Water Quality Testing',
+];
+
+export const ADMIN_EMAIL = 'admin@ozonxt.com'; // Replace with your actual admin email for testing
+
+export const SERVICE_STATUSES = [
+  'Pending Confirmation',
+  'Scheduled',
+  'Technician Assigned',
+  'Work In Progress',
+  'Completed',
+  'Cancelled',
+  'Rescheduled',
 ];

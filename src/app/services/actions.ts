@@ -1,6 +1,8 @@
+
 'use server';
 
 import { z } from 'zod';
+import { SERVICE_STATUSES } from '@/lib/constants';
 
 // Ensure date is parsed correctly
 const preprocessDate = (arg: unknown) => {
@@ -16,6 +18,21 @@ const bookingSchema = z.object({
   preferredDate: z.preprocess(preprocessDate, z.date({ required_error: "Please pick a date." })),
   preferredTime: z.string().min(1, { message: 'Please select a preferred time.' }),
 });
+
+export type BookingFormData = z.infer<typeof bookingSchema>;
+
+// Type for stored bookings, including ID, user email and status
+export type ServerBooking = BookingFormData & {
+  id: string;
+  userEmail: string; // Using email as user identifier
+  status: string;
+  bookedAt: Date;
+};
+
+// In-memory store for bookings (for prototype purposes)
+// This will be reset every time the server restarts.
+// In a real app, use a database like Firestore.
+export let serverBookings: ServerBooking[] = [];
 
 export interface BookingFormState {
   message: string | null;
@@ -54,12 +71,20 @@ export async function bookServiceAction(
       };
     }
 
-    // Simulate saving to database
-    console.log('Booking Data:', validatedFields.data);
-    // In a real app, you'd save to Firebase Firestore or another DB here.
-    // Example: await db.collection('bookings').add(validatedFields.data);
+    const newBooking: ServerBooking = {
+      ...validatedFields.data,
+      id: crypto.randomUUID(), // Generate a unique ID
+      userEmail: validatedFields.data.email, // Associate with user's email
+      status: SERVICE_STATUSES[0], // Initial status
+      bookedAt: new Date(),
+    };
 
-    return { message: 'Service booked successfully! We will contact you shortly.', success: true };
+    serverBookings.push(newBooking);
+    console.log('New Booking Added:', newBooking);
+    console.log('All Bookings:', serverBookings);
+
+
+    return { message: 'Service booked successfully! We will contact you shortly to confirm.', success: true };
   } catch (error) {
     console.error('Service booking error:', error);
     return { message: 'An unexpected error occurred. Please try again later.', success: false };
