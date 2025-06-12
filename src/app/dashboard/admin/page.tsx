@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getAllBookings, updateBookingStatus } from '@/app/services/actions'; // Updated import path
-import type { ServerBooking } from '@/app/services/actions';
+import { getAllBookings, updateBookingStatus } from '@/app/services/actions';
+import type { ServerBooking } from '@/app/services/actions'; // This type now expects Date objects
 import { ADMIN_EMAIL, SERVICE_STATUSES } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -26,17 +26,17 @@ export default function AdminDashboardPage() {
 
   const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     if (!isAdmin) return;
     setIsLoading(true);
     setError(null);
     try {
-      // Pass the current user's email to getAllBookings for the server-side admin check
       const result = await getAllBookings(authUser?.email);
       if ('error' in result) {
         setError(result.error);
         setBookings([]);
       } else {
+        // Data from Firestore is already processed to have Date objects
         setBookings(result as ServerBooking[]);
       }
     } catch (err) {
@@ -46,7 +46,7 @@ export default function AdminDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAdmin, authUser?.email]);
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
@@ -55,11 +55,10 @@ export default function AdminDashboardPage() {
       setIsLoading(false);
       setError("Access Denied: You do not have permission to view this page.");
     }
-  }, [authLoading, isAdmin, authUser]); // authUser added as dependency for fetchBookings call
+  }, [authLoading, isAdmin, fetchBookings]);
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
-      // Pass the current user's email to updateBookingStatus for the server-side admin check
       const result = await updateBookingStatus(bookingId, newStatus, authUser?.email);
       toast({
         title: result.success ? 'Status Updated' : 'Update Failed',
@@ -67,7 +66,6 @@ export default function AdminDashboardPage() {
         variant: result.success ? 'default' : 'destructive',
       });
       if (result.success) {
-        // Refresh bookings list optimistically or by re-fetching
         setBookings(prevBookings =>
           prevBookings.map(b => (b.id === bookingId ? { ...b, status: newStatus } : b))
         );
@@ -90,7 +88,7 @@ export default function AdminDashboardPage() {
  };
 
 
-  if (authLoading || (isAdmin && isLoading && bookings.length === 0 && !error)) { // Show loader if admin is loading initial data and no error yet
+  if (authLoading || (isAdmin && isLoading && bookings.length === 0 && !error)) { 
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
@@ -134,7 +132,8 @@ export default function AdminDashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px]">Booked Date</TableHead>
+                  <TableHead className="w-[100px]">Booking ID</TableHead>
+                  <TableHead className="w-[150px]">Booked At</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Preferred Date</TableHead>
@@ -142,8 +141,9 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.sort((a,b) => new Date(b.bookedAt).getTime() - new Date(a.bookedAt).getTime()).map((booking) => (
+                {bookings.map((booking) => ( // No sort here if Firestore query sorts
                   <TableRow key={booking.id}>
+                    <TableCell className="font-mono text-xs">{booking.displayId}</TableCell>
                     <TableCell className="text-xs">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
                     <TableCell>
                       <div className="font-medium">{booking.name}</div>

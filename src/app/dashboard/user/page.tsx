@@ -4,12 +4,12 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getUserBookings } from '@/app/services/actions'; // Updated import path
-import type { ServerBooking } from '@/app/services/actions';
+import { getUserBookings } from '@/app/services/actions'; 
+import type { ServerBooking } from '@/app/services/actions'; // This type now expects Date objects
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, Info, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { User, ShoppingBag, CalendarDays, Clock, Tag, Info, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function UserDashboardPage() {
@@ -25,6 +25,7 @@ export default function UserDashboardPage() {
       setError(null);
       getUserBookings(authUser.email)
         .then(data => {
+          // Data from Firestore is already processed to have Date objects for timestamps
           setBookings(data);
         })
         .catch(err => {
@@ -35,7 +36,6 @@ export default function UserDashboardPage() {
           setIsLoadingBookings(false);
         });
     } else if (!authLoading) {
-      // If not loading and no email, means user is not logged in or email is missing
       setIsLoadingBookings(false);
     }
   }, [authUser, authLoading]);
@@ -55,10 +55,10 @@ export default function UserDashboardPage() {
   }
   
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    if (status.toLowerCase().includes('completed')) return 'default'; // Primary color for completed
-    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned')) return 'secondary'; // Secondary for in progress
+    if (status.toLowerCase().includes('completed')) return 'default'; 
+    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned')) return 'secondary'; 
     if (status.toLowerCase().includes('cancelled')) return 'destructive';
-    return 'outline'; // Outline for pending, scheduled
+    return 'outline'; 
  };
 
 
@@ -106,11 +106,14 @@ export default function UserDashboardPage() {
           )}
           {!isLoadingBookings && !error && bookings.length > 0 && (
             <div className="space-y-6">
-              {bookings.sort((a,b) => new Date(b.bookedAt).getTime() - new Date(a.bookedAt).getTime()).map(booking => (
+              {bookings.map(booking => ( // No need to sort here if Firestore query sorts
                 <Card key={booking.id} className="bg-muted/30">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{booking.serviceType}</CardTitle>
+                      <div>
+                        <CardTitle className="text-lg">{booking.serviceType}</CardTitle>
+                        <p className="text-xs text-accent font-mono mt-1">ID: {booking.displayId}</p>
+                      </div>
                       <Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge>
                     </div>
                      <p className="text-xs text-muted-foreground pt-1">Booked on: {format(new Date(booking.bookedAt), "PPP p")}</p>
@@ -130,7 +133,7 @@ export default function UserDashboardPage() {
                     </div>
                      <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-primary" />
-                      <span>Booking ID: <span className="font-mono text-xs bg-muted p-1 rounded">{booking.id.substring(0,8)}...</span></span>
+                      <span>Booking ID: <span className="font-mono text-xs bg-muted p-1 rounded">{booking.id.substring(0,8)}...</span> (Internal)</span>
                     </div>
                   </CardContent>
                 </Card>

@@ -3,6 +3,8 @@
 
 import { z } from 'zod';
 import { ADMIN_EMAIL, SERVICE_STATUSES } from '@/lib/constants';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, runTransaction, serverTimestamp, orderBy, Timestamp } from 'firebase/firestore';
 
 // Ensure date is parsed correctly
 const preprocessDate = (arg: unknown) => {
@@ -21,17 +23,15 @@ const bookingSchema = z.object({
 
 export type BookingFormData = z.infer<typeof bookingSchema>;
 
-// Type for stored bookings, including ID, user email and status
+// Type for stored bookings in Firestore
 export type ServerBooking = BookingFormData & {
-  id: string;
-  userEmail: string; // Using email as user identifier
+  id: string; // Firestore document ID
+  displayId: string; // OZNxxxx
+  userEmail: string; 
   status: string;
-  bookedAt: Date;
+  bookedAt: Timestamp; // Firestore Timestamp
+  preferredDate: Timestamp; // Store as Firestore Timestamp
 };
-
-// In-memory store for bookings (for prototype purposes) - NOT EXPORTED
-let serverBookings: ServerBooking[] = [];
-let bookingIdCounter = 0; // Counter for sequential booking IDs
 
 export interface BookingFormState {
   message: string | null;
@@ -46,6 +46,33 @@ export interface BookingFormState {
   success: boolean;
 }
 
+// Firestore counter for sequential booking IDs
+const COUNTER_COLLECTION = 'counters';
+const SERVICE_BOOKING_COUNTER_DOC = 'serviceBookingCounter';
+
+async function getNextBookingDisplayId(): Promise<string> {
+  const counterRef = doc(db, COUNTER_COLLECTION, SERVICE_BOOKING_COUNTER_DOC);
+  let newIdNumber = 1;
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      if (!counterDoc.exists()) {
+        transaction.set(counterRef, { currentId: newIdNumber });
+      } else {
+        newIdNumber = counterDoc.data().currentId + 1;
+        transaction.update(counterRef, { currentId: newIdNumber });
+      }
+    });
+    return `OZN${String(newIdNumber).padStart(4, '0')}`;
+  } catch (error) {
+    console.error("Transaction failed: ", error);
+    // Fallback or rethrow, for now, let's throw to indicate a critical issue
+    throw new Error("Could not generate booking ID.");
+  }
+}
+
+
 export async function bookServiceAction(
   prevState: BookingFormState | undefined,
   formData: FormData
@@ -56,7 +83,7 @@ export async function bookServiceAction(
       email: formData.get('email'),
       phone: formData.get('phone'),
       serviceType: formData.get('serviceType'),
-      preferredDate: formData.get('preferredDate'),
+      preferredDate: formData.get('preferredDate'), // This will be string from FormData
       preferredTime: formData.get('preferredTime'),
     };
 
@@ -70,55 +97,86 @@ export async function bookServiceAction(
       };
     }
     
-    bookingIdCounter++;
-    const formattedCounter = String(bookingIdCounter).padStart(4, '0');
+    const displayId = await getNextBookingDisplayId();
 
-    const newBooking: ServerBooking = {
+    const newBookingData = {
       ...validatedFields.data,
-      id: `OZN${formattedCounter}`, // Booking ID format: OZNXXXX
+      displayId,
       userEmail: validatedFields.data.email, 
-      status: SERVICE_STATUSES[0], 
-      bookedAt: new Date(),
+      status: SERVICE_STATUSES[0], // Default status: Pending Confirmation
+      bookedAt: serverTimestamp(), // Use Firestore server timestamp
+      preferredDate: Timestamp.fromDate(validatedFields.data.preferredDate), // Convert Date to Firestore Timestamp
     };
 
-    serverBookings.push(newBooking);
-    console.log('New Booking Added:', newBooking);
-    console.log('All Bookings:', serverBookings);
-
+    await addDoc(collection(db, 'serviceBookings'), newBookingData);
+    console.log('New Booking Added to Firestore with Display ID:', displayId);
 
     return { message: 'Service booked successfully! We will contact you shortly to confirm.', success: true };
   } catch (error) {
     console.error('Service booking error:', error);
+    // Check if error is from getNextBookingDisplayId
+    if (error instanceof Error && error.message === "Could not generate booking ID.") {
+         return { message: 'Failed to generate booking ID. Please try again.', success: false };
+    }
     return { message: 'An unexpected error occurred. Please try again later.', success: false };
   }
 }
 
 async function isAdminCheck(userEmail: string | null | undefined): Promise<boolean> {
   if (!userEmail) return false;
-  // Check if userEmail is in the ADMIN_EMAIL array
   return ADMIN_EMAIL.includes(userEmail);
 }
 
+// Helper to convert Firestore Timestamps to JS Date objects for client-side consumption
+const processBookingDoc = (docSnapshot: any): ServerBooking => {
+    const data = docSnapshot.data();
+    return {
+      ...data,
+      id: docSnapshot.id, // Firestore document ID
+      bookedAt: data.bookedAt instanceof Timestamp ? data.bookedAt.toDate() : new Date(data.bookedAt),
+      preferredDate: data.preferredDate instanceof Timestamp ? data.preferredDate.toDate() : new Date(data.preferredDate),
+    } as ServerBooking;
+};
+
 
 export async function getUserBookings(userEmail: string): Promise<ServerBooking[]> {
-  console.log(`Fetching bookings for email: ${userEmail}`);
-  const bookings = serverBookings.filter(booking => booking.userEmail === userEmail);
-  console.log(`Found bookings for ${userEmail}:`, bookings);
-  // Return a deep copy to avoid issues with RSC and client components if objects are mutated
-  return JSON.parse(JSON.stringify(bookings)); 
+  console.log(`Fetching Firestore bookings for email: ${userEmail}`);
+  if (!userEmail) return [];
+
+  const bookingsCol = collection(db, 'serviceBookings');
+  const q = query(bookingsCol, where('userEmail', '==', userEmail), orderBy('bookedAt', 'desc'));
+  
+  try {
+    const querySnapshot = await getDocs(q);
+    const bookings = querySnapshot.docs.map(docSnap => processBookingDoc(docSnap));
+    console.log(`Found Firestore bookings for ${userEmail}:`, bookings.length);
+    return bookings;
+  } catch (error) {
+    console.error("Error fetching user bookings from Firestore: ", error);
+    return [];
+  }
 }
 
 export async function getAllBookings(currentUserEmail: string | null | undefined): Promise<ServerBooking[] | { error: string }> {
   if (!await isAdminCheck(currentUserEmail)) {
     return { error: "Unauthorized: You do not have permission to view all bookings." };
   }
-  console.log('Admin fetching all bookings:', serverBookings);
-  // Return a deep copy
-  return JSON.parse(JSON.stringify(serverBookings)); 
+  console.log('Admin fetching all bookings from Firestore');
+  const bookingsCol = collection(db, 'serviceBookings');
+  const q = query(bookingsCol, orderBy('bookedAt', 'desc'));
+
+  try {
+    const querySnapshot = await getDocs(q);
+    const bookings = querySnapshot.docs.map(docSnap => processBookingDoc(docSnap));
+    return bookings;
+  } catch (error) {
+    console.error("Error fetching all bookings from Firestore: ", error);
+    return { error: "Failed to fetch bookings from database." };
+  }
 }
 
 export async function updateBookingStatus(
-  bookingId: string,
+  bookingId: string, // This is Firestore document ID
   newStatus: string,
   currentUserEmail: string | null | undefined
 ): Promise<{ success: boolean; message: string }> {
@@ -130,15 +188,16 @@ export async function updateBookingStatus(
     return { success: false, message: "Invalid status value." };
   }
 
-  const bookingIndex = serverBookings.findIndex(booking => booking.id === bookingId);
+  const bookingRef = doc(db, 'serviceBookings', bookingId);
 
-  if (bookingIndex === -1) {
-    return { success: false, message: "Booking not found." };
+  try {
+    await updateDoc(bookingRef, {
+      status: newStatus
+    });
+    console.log(`Admin updated booking ${bookingId} to status ${newStatus} in Firestore`);
+    return { success: true, message: `Booking status updated to ${newStatus}.` };
+  } catch (error) {
+    console.error("Error updating booking status in Firestore: ", error);
+    return { success: false, message: "Failed to update booking status in database." };
   }
-
-  serverBookings[bookingIndex].status = newStatus;
-  console.log(`Admin updated booking ${bookingId} to status ${newStatus}`);
-  console.log('Current serverBookings:', serverBookings);
-
-  return { success: true, message: `Booking status updated to ${newStatus}.` };
 }

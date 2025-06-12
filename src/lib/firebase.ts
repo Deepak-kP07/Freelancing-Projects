@@ -1,8 +1,9 @@
+
 // src/lib/firebase.ts
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-// import { getFirestore } from 'firebase/firestore'; // Uncomment if you use Firestore
+import { getFirestore } from 'firebase/firestore'; // Import Firestore
 
 // Construct Firebase configuration object from environment variables
 const firebaseConfig = {
@@ -15,12 +16,9 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Optional: Add debug logs here if you still face issues after restarting
-// console.log('[NEW firebase.ts] Loaded API Key:', firebaseConfig.apiKey);
-
 // Check if the essential API key is configured through environment variables
 if (!firebaseConfig.apiKey) {
-  console.error('[DEBUG] Firebase config from env:', firebaseConfig); // Log the whole config
+  console.error('[DEBUG] Firebase config from env:', firebaseConfig); 
   throw new Error(
     "Firebase API Key is not configured OR IS UNDEFINED. " +
     "Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is correctly set in your .env.local file (in the project root directory) " +
@@ -33,11 +31,11 @@ let app: FirebaseApp;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
 } else {
-  app = getApp(); // Use the existing app if already initialized
+  app = getApp(); 
 }
 
 const auth = getAuth(app);
-// const db = getFirestore(app); // Uncomment if you use Firestore
+const db = getFirestore(app); // Initialize Firestore
 const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, googleProvider /*, db */ };
+export { app, auth, db, googleProvider };

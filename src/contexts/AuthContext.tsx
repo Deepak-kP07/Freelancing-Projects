@@ -10,13 +10,13 @@ import {
   signInWithEmailAndPassword,
   type AuthError,
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
-import { useDispatch } from 'react-redux';
+import { auth, googleProvider, db } from '@/lib/firebase'; // Import db
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // Import Firestore functions
+import { useDispatch, useSelector } from 'react-redux';
 import { setUser, clearUser, setAuthLoading, setAuthError, type SerializableUser } from '@/store/authSlice';
-import type { AppDispatch } from '@/store';
+import type { AppDispatch, RootState } from '@/store';
 
 interface AuthContextType {
-  // User state is now primarily in Redux
   signInWithGoogle: () => Promise<User | null>;
   signInUserWithEmail: (email: string, pass: string) => Promise<User | null>;
   signUpUserWithEmail: (email: string, pass: string) => Promise<User | null>;
@@ -25,7 +25,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to convert Firebase User to SerializableUser
 const toSerializableUser = (firebaseUser: User): SerializableUser => {
   return {
     uid: firebaseUser.uid,
@@ -36,22 +35,51 @@ const toSerializableUser = (firebaseUser: User): SerializableUser => {
   };
 };
 
+// Function to save/update user profile in Firestore
+const updateUserProfileInFirestore = async (user: User) => {
+  if (!user) return;
+  const userRef = doc(db, 'users', user.uid);
+  const userData = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    lastLoginAt: serverTimestamp(), // Track last login
+  };
+  try {
+    // Using setDoc with merge: true acts as an upsert
+    await setDoc(userRef, userData, { merge: true }); 
+    console.log('User profile synced to Firestore:', user.uid);
+  } catch (error) {
+    console.error('Error syncing user profile to Firestore:', error);
+  }
+};
+
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const reduxUser = useSelector((state: RootState) => state.auth.user); // Get user from Redux
 
   useEffect(() => {
     dispatch(setAuthLoading(true));
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         dispatch(setUser(toSerializableUser(currentUser)));
+        updateUserProfileInFirestore(currentUser); // Sync profile on auth state change
       } else {
         dispatch(clearUser());
       }
-      // setAuthLoading(false) is handled by setUser and clearUser reducers
     });
     return () => unsubscribe();
   }, [dispatch]);
+
+  // // Alternative: Sync profile when Redux user state changes
+  // useEffect(() => {
+  //   if (reduxUser && auth.currentUser) { // Ensure auth.currentUser is also available
+  //     updateUserProfileInFirestore(auth.currentUser);
+  //   }
+  // }, [reduxUser]); // This effect runs when reduxUser changes
+
 
   const handleAuthError = (error: unknown) => {
     const authError = error as AuthError;
@@ -70,7 +98,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         break;
       case 'auth/user-not-found':
       case 'auth/wrong-password':
-      case 'auth/invalid-credential': // Added this case
+      case 'auth/invalid-credential': 
         friendlyMessage = 'Invalid email or password. Please check your credentials.';
         break;
       case 'auth/requires-recent-login':
@@ -87,54 +115,54 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         friendlyMessage = 'This domain is not authorized for Firebase operations. Please check your Firebase project settings.';
         break;
     }
-    dispatch(setAuthError(friendlyMessage)); // This will also set loading to false in the slice
+    dispatch(setAuthError(friendlyMessage)); 
     return null;
   }
 
   const signInWithGoogle = async (): Promise<User | null> => {
     dispatch(setAuthLoading(true));
-    dispatch(setAuthError(null)); // Clear previous errors
+    dispatch(setAuthError(null)); 
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
+      // onAuthStateChanged handles setUser and updateUserProfileInFirestore
       return result.user;
     } catch (error) {
-      return handleAuthError(error); // This will set loading to false via setAuthError
+      return handleAuthError(error); 
     }
   };
 
   const signInUserWithEmail = async (email: string, pass: string): Promise<User | null> => {
     dispatch(setAuthLoading(true));
-    dispatch(setAuthError(null)); // Clear previous errors
+    dispatch(setAuthError(null)); 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
+      // onAuthStateChanged handles setUser and updateUserProfileInFirestore
       return userCredential.user;
     } catch (error) {
-      return handleAuthError(error); // This will set loading to false via setAuthError
+      return handleAuthError(error); 
     }
   };
 
   const signUpUserWithEmail = async (email: string, pass: string): Promise<User | null> => {
     dispatch(setAuthLoading(true));
-    dispatch(setAuthError(null)); // Clear previous errors
+    dispatch(setAuthError(null)); 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will dispatch setUser and setAuthLoading(false) via setUser
+      // onAuthStateChanged handles setUser and updateUserProfileInFirestore
       return userCredential.user;
     } catch (error) {
-      return handleAuthError(error); // This will set loading to false via setAuthError
+      return handleAuthError(error); 
     }
   };
 
   const signOutUser = async () => {
     dispatch(setAuthLoading(true));
-    dispatch(setAuthError(null)); // Clear previous errors
+    dispatch(setAuthError(null)); 
     try {
       await signOut(auth);
-      // onAuthStateChanged will dispatch clearUser and setAuthLoading(false) via clearUser
+      // onAuthStateChanged handles clearUser
     } catch (error) {
-      handleAuthError(error); // This will set loading to false via setAuthError
+      handleAuthError(error); 
     }
   };
 

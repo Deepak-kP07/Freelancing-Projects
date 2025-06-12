@@ -1,5 +1,6 @@
+
 import Link from 'next/link';
-import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, Droplets } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, Droplets, Code } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -40,6 +41,11 @@ export default function Footer() {
               <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="text-muted-foreground hover:text-primary transition-colors"><Twitter size={22} /></a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={22} /></a>
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={22} /></a>
+            </div>
+             <div className="mt-6">
+                <Link href="/developer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <Code size={16}/> Developer Info
+                </Link>
             </div>
           </div>
         </div>
