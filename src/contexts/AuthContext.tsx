@@ -73,16 +73,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => unsubscribe();
   }, [dispatch]);
 
-  // // Alternative: Sync profile when Redux user state changes
-  // useEffect(() => {
-  //   if (reduxUser && auth.currentUser) { // Ensure auth.currentUser is also available
-  //     updateUserProfileInFirestore(auth.currentUser);
-  //   }
-  // }, [reduxUser]); // This effect runs when reduxUser changes
-
-
   const handleAuthError = (error: unknown) => {
     const authError = error as AuthError;
+    // This line is crucial for debugging. Check your browser's developer console for this output.
     console.error("Firebase Auth Error Code:", authError.code, "Message:", authError.message, "Full Error:", authError);
     
     let friendlyMessage = 'An unknown authentication error occurred. Please try again.';
@@ -113,6 +106,23 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         break;
       case 'auth/unauthorized-domain':
         friendlyMessage = 'This domain is not authorized for Firebase operations. Please check your Firebase project settings.';
+        break;
+      case 'auth/invalid-api-key':
+        friendlyMessage = 'Invalid Firebase API key. Please check your Firebase project configuration.';
+        break;
+      case 'auth/project-not-found':
+        friendlyMessage = 'Firebase project not found. Please verify your project configuration.';
+        break;
+      case 'auth/app-deleted':
+        friendlyMessage = 'The Firebase app associated with this project has been deleted.';
+        break;
+      case 'auth/configuration-not-found':
+         friendlyMessage = 'Firebase configuration not found or is incomplete. Please check your setup.';
+         break;
+      default:
+        // Log unhandled codes specifically for easier debugging if new ones appear
+        console.warn("Unhandled Firebase Auth Error Code in switch:", authError.code, "Raw error:", error);
+        friendlyMessage = 'An unknown authentication error occurred. Please try again.';
         break;
     }
     dispatch(setAuthError(friendlyMessage)); 
@@ -180,3 +190,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

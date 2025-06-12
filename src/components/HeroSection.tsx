@@ -19,7 +19,7 @@ export default function HeroSection() {
               <Button size="lg" className="w-full sm:w-auto">Explore Products</Button>
             </Link>
             <Link href="/services" passHref>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10">Book a Service</Button>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-blue">Book a Service</Button>
             </Link>
           </div>
         </div>
