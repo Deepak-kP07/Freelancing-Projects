@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useActionState } from 'react'; // Corrected import
+import { useEffect, useState } from 'react'; // Added useState
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,12 +14,25 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"; // Added AlertDialog imports
 import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { bookServiceAction, type BookingFormState } from '@/app/services/actions';
 import { SERVICE_TYPES } from '@/lib/constants';
+import { useSelector } from 'react-redux'; // Added useSelector
+import type { RootState } from '@/store'; // Added RootState
+import { useRouter } from 'next/navigation'; // Added useRouter
 
 const bookingSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
@@ -45,6 +58,9 @@ function SubmitButton() {
 export default function ServiceBookingForm() {
   const { toast } = useToast();
   const [state, formAction] = useActionState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const router = useRouter();
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -70,7 +86,6 @@ export default function ServiceBookingForm() {
       }
     }
     if (state?.errors) {
-        // Set form errors for react-hook-form to display
         (Object.keys(state.errors) as Array<keyof BookingFormData>).forEach((key) => {
             const errorMessages = state.errors?.[key];
             if (errorMessages && errorMessages.length > 0) {
@@ -81,6 +96,23 @@ export default function ServiceBookingForm() {
   }, [state, toast, form]);
 
   const watchedPreferredDate = form.watch('preferredDate');
+
+  // Auto-fill name and email if user is logged in
+  useEffect(() => {
+    if (authUser) {
+      if (authUser.displayName) {
+        form.setValue('name', authUser.displayName, { shouldValidate: true });
+      }
+      if (authUser.email) {
+        form.setValue('email', authUser.email, { shouldValidate: true });
+      }
+    } else {
+      // Optionally clear if user logs out while form is open, or handle as needed
+      // form.setValue('name', '', { shouldValidate: false });
+      // form.setValue('email', '', { shouldValidate: false });
+    }
+  }, [authUser, form]);
+
 
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
@@ -113,7 +145,7 @@ export default function ServiceBookingForm() {
             <Select
               onValueChange={(value) => form.setValue('serviceType', value, { shouldValidate: true })}
               defaultValue={form.getValues('serviceType')}
-              name="serviceType" // Ensure name is passed for FormData
+              name="serviceType"
             >
               <SelectTrigger className={cn(form.formState.errors.serviceType || state?.errors?.serviceType ? 'border-destructive' : '')}>
                 <SelectValue placeholder="Select a service" />
@@ -149,12 +181,10 @@ export default function ServiceBookingForm() {
                   selected={watchedPreferredDate}
                   onSelect={(date) => form.setValue('preferredDate', date || new Date(), {shouldValidate: true})}
                   initialFocus
-                  disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Disable past dates
+                  disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))}
                 />
               </PopoverContent>
             </Popover>
-            {/* This hidden input ensures the date is part of FormData for the server action */}
-            {/* It does NOT use form.register to avoid conflict with RHF's internal Date object state */}
             <input
               type="hidden"
               name="preferredDate"
@@ -169,10 +199,32 @@ export default function ServiceBookingForm() {
             {(form.formState.errors.preferredTime || state?.errors?.preferredTime) && <p className="text-sm text-destructive mt-1">{form.formState.errors.preferredTime?.message || state?.errors?.preferredTime?.[0]}</p>}
           </div>
 
-          <SubmitButton />
+          {authUser ? (
+            <SubmitButton />
+          ) : (
+            <Button type="button" onClick={() => setIsLoginModalOpen(true)} className="w-full">
+              Book Service
+            </Button>
+          )}
         </form>
       </CardContent>
+      <AlertDialog open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Authentication Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please log in or create an account to book a service.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="outline" onClick={() => { router.push('/signup'); setIsLoginModalOpen(false); }}>Sign Up</Button>
+            <AlertDialogAction asChild>
+              <Button onClick={() => { router.push('/login'); setIsLoginModalOpen(false); }}>Login</Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
-
