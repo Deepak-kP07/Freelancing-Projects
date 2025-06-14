@@ -113,7 +113,7 @@ export const SERVICE_TYPES = [
 ];
 
 // Changed ADMIN_EMAIL to an array of strings
-export const ADMIN_EMAIL = ['admin@ozonxt.com','deepakperumal09@gmail.com'];
+export const ADMIN_EMAIL = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com'];
 
 export const SERVICE_STATUSES = [
   'Pending Confirmation',

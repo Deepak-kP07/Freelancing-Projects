@@ -28,9 +28,9 @@ export default function Footer() {
           <div>
             <h4 className="text-md font-headline font-semibold text-foreground mb-4">Contact Info</h4>
             <address className="space-y-2 text-sm not-italic text-muted-foreground">
-              <p className="flex items-start"><MapPin size={16} className="mr-2 mt-1 shrink-0 text-primary" />123 Aqua Street, Pureville, CleanState 560001, India</p>
-              <p className="flex items-center"><Phone size={16} className="mr-2 shrink-0 text-primary" /><a href="tel:+911234567890" className="hover:text-primary transition-colors">+91 123 456 7890</a></p>
-              <p className="flex items-center"><Mail size={16} className="mr-2 shrink-0 text-primary" /><a href="mailto:info@ozonxt.com" className="hover:text-primary transition-colors">info@ozonxt.com</a></p>
+              <p className="flex items-start"><MapPin size={16} className="mr-2 mt-1 shrink-0 text-primary capitalize" />  1-22 Kapu Street Keelagaram (V), Naryanavanam (M) Tirupati, Andhra Pradesh, 517581</p>
+              <p className="flex items-center"><Phone size={16} className="mr-2 shrink-0 text-primary" /><a href="tel:+919989263971" className="hover:text-primary transition-colors">+91 9989263971</a></p>
+              <p className="flex items-center"><Mail size={16} className="mr-2 shrink-0 text-primary" /><a href="mailto:tumbikarthik2797@gmail.com" className="hover:text-primary transition-colors">tumbikarthik2797@gmail.com</a></p>
             </address>
           </div>
           
