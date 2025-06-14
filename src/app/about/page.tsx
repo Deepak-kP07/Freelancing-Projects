@@ -18,7 +18,7 @@ export default function AboutPage() {
             <Image
               src="https://placehold.co/800x600.png"
               alt="Team working on water solutions"
-              layout="fill"
+              fill={true}
               className="object-cover"
               data-ai-hint="water lab"
             />

@@ -27,7 +27,7 @@ export default function HeroSection() {
            <Image 
             src="https://placehold.co/800x600.png" 
             alt="Clean water stream" 
-            layout="fill"
+            fill={true}
             data-ai-hint="purified water stream"
             className="object-cover transform group-hover:scale-105 transition-transform duration-500"
           />

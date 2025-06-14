@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Image
             src={product.imageUrl}
             alt={product.name}
-            layout="fill"
+            fill={true}
             data-ai-hint={product.dataAiHint}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />

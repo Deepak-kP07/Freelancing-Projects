@@ -12,11 +12,19 @@ import Link from 'next/link';
 import { Trash2, Minus, Plus, ShoppingBag, ExternalLink } from 'lucide-react';
 import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+
 
 export default function CartPage() {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity < 1) {
@@ -40,16 +48,16 @@ export default function CartPage() {
 
     let message = "Hello Ozonxt, I'd like to order the following items:\n\n";
     cartItems.forEach(item => {
-      message += `${item.name} (x${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}\n`;
+      message += `${item.name} (x${item.quantity}) - &#x20B9;${(item.price * item.quantity).toFixed(2)}\n`;
     });
-    message += `\nTotal: ₹${totalAmount.toFixed(2)}\n\n`;
+    message += `\nTotal: &#x20B9;${totalAmount.toFixed(2)}\n\n`;
     message += "Please let me know the next steps. Thank you!";
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  if (cartItems.length === 0) {
+  if (!isClient || cartItems.length === 0) {
     return (
       <div className="text-center py-16">
         <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-6" />
@@ -70,7 +78,7 @@ export default function CartPage() {
           {cartItems.map((item: CartItem) => (
             <Card key={item.id} className="flex flex-col sm:flex-row items-center p-4 gap-4 shadow-md">
               <div className="relative w-24 h-24 sm:w-20 sm:h-20 rounded-md overflow-hidden flex-shrink-0 mb-4 sm:mb-0">
-                <Image src={item.imageUrl} alt={item.name} layout="fill" className="object-cover" data-ai-hint={item.dataAiHint} />
+                <Image src={item.imageUrl} alt={item.name} fill={true} className="object-cover" data-ai-hint={item.dataAiHint} />
               </div>
               <div className="flex-grow text-center sm:text-left">
                 <h3 className="font-semibold text-lg">{item.name}</h3>

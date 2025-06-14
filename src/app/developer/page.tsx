@@ -30,7 +30,7 @@ export default function DeveloperPage() {
               <Image
                 src={developer.imageUrl}
                 alt={developer.name}
-                layout="fill"
+                fill={true}
                 className="object-cover"
                 data-ai-hint={developer.dataAiHint}
               />
