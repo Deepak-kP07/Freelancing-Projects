@@ -7,7 +7,7 @@ import AuthButton from './AuthButton';
 import CartIcon from './CartIcon';
 import ThemeToggleButton from './ThemeToggleButton';
 import NavLink from './NavLink';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Droplets, Menu, LayoutDashboard } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -76,15 +76,21 @@ export default function Header() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6">
-                <Link href="/" className="flex items-center gap-2 text-primary mb-8" onClick={closeMobileMenu}>
-                  <Droplets size={28} />
-                  <h1 className="text-xl font-headline font-semibold">Ozonxt</h1>
-                </Link>
-                <nav className="flex flex-col gap-4">
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6 flex flex-col">
+                <SheetHeader className="pb-4 mb-4 border-b">
+                  <SheetTitle>
+                    <Link href="/" className="flex items-center gap-2 text-primary" onClick={closeMobileMenu}>
+                      <Droplets size={28} />
+                      <span className="text-xl font-headline font-semibold">Ozonxt</span>
+                    </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                
+                <nav className="flex flex-col gap-y-2 flex-grow">
                   {commonNavLinks}
                 </nav>
-                <div className="mt-auto pt-6 border-t border-border">
+                
+                <div className="mt-auto pt-4 border-t">
                   <AuthButton />
                 </div>
               </SheetContent>
