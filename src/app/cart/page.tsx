@@ -40,9 +40,9 @@ export default function CartPage() {
 
     let message = "Hello Ozonxt, I'd like to order the following items:\n\n";
     cartItems.forEach(item => {
-      message += `${item.name} (x${item.quantity}) - INR ${(item.price * item.quantity).toFixed(2)}\n`;
+      message += `${item.name} (x${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}\n`;
     });
-    message += `\nTotal: INR ${totalAmount.toFixed(2)}\n\n`;
+    message += `\nTotal: ₹${totalAmount.toFixed(2)}\n\n`;
     message += "Please let me know the next steps. Thank you!";
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -74,7 +74,7 @@ export default function CartPage() {
               </div>
               <div className="flex-grow text-center sm:text-left">
                 <h3 className="font-semibold text-lg">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">INR {item.price.toFixed(2)} each</p>
+                <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)} each</p>
               </div>
               <div className="flex items-center gap-2 my-2 sm:my-0">
                 <Button variant="outline" size="icon" onClick={() => handleQuantityChange(item.id, item.quantity - 1)}>
@@ -91,7 +91,7 @@ export default function CartPage() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="font-semibold w-24 text-center sm:text-right">INR {(item.price * item.quantity).toFixed(2)}</p>
+              <p className="font-semibold w-24 text-center sm:text-right">₹{(item.price * item.quantity).toFixed(2)}</p>
               <Button variant="ghost" size="icon" onClick={() => dispatch(removeItem(item.id))} className="text-destructive hover:text-destructive/80">
                 <Trash2 className="h-5 w-5" />
               </Button>
@@ -107,7 +107,7 @@ export default function CartPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>INR {totalAmount.toFixed(2)}</span>
+                <span>₹{totalAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Shipping & Taxes</span>
@@ -116,7 +116,7 @@ export default function CartPage() {
               <hr/>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span>INR {totalAmount.toFixed(2)}</span>
+                <span>₹{totalAmount.toFixed(2)}</span>
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-3">
