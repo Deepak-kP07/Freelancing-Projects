@@ -43,7 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-xl font-headline mb-1 truncate" title={product.name}>{product.name}</CardTitle>
         <CardDescription className="text-sm text-foreground/70 mb-2 line-clamp-2">{product.description}</CardDescription>
-        <p className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
+        <p className="text-lg font-semibold text-primary">&#x20B9;{product.price.toFixed(2)}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button onClick={handleAddToCart} className="w-full">
