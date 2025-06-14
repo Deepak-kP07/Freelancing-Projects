@@ -27,21 +27,30 @@ export default function AdminDashboardPage() {
   const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
   const fetchBookings = useCallback(async () => {
-    if (!isAdmin) return;
+    console.log('AdminDashboard: Attempting to fetch bookings. User email:', authUser?.email, 'Is client-side admin:', isAdmin);
+    if (!isAdmin) {
+      setError("Access Denied: Client-side admin check failed.");
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
       const result = await getAllBookings(authUser?.email);
       if ('error' in result) {
-        setError(result.error);
+        let detailedError = result.error;
+        if (detailedError === "Failed to fetch bookings from database.") {
+            detailedError += " Please check browser console for Firebase errors (e.g., permissions, missing indexes).";
+        }
+        setError(detailedError);
         setBookings([]);
       } else {
         // Data from Firestore is already processed to have Date objects
         setBookings(result as ServerBooking[]);
       }
     } catch (err) {
-      console.error("Error fetching all bookings:", err);
-      setError("Failed to load bookings.");
+      console.error("Error fetching all bookings in AdminDashboardPage:", err);
+      setError("Failed to load bookings. An unexpected error occurred. Check browser console.");
       setBookings([]);
     } finally {
       setIsLoading(false);
@@ -51,11 +60,15 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!authLoading && isAdmin) {
       fetchBookings();
-    } else if (!authLoading && !isAdmin) {
+    } else if (!authLoading && !isAdmin && authUser) { // Check authUser to ensure it's not just loading
       setIsLoading(false);
-      setError("Access Denied: You do not have permission to view this page.");
+      setError("Access Denied: You do not have permission to view this page. Ensure your email is in ADMIN_EMAIL constant and Firestore rules.");
+       console.warn("AdminDashboard: Access denied. User email:", authUser?.email, "Expected admin emails:", ADMIN_EMAIL);
+    } else if (!authLoading && !authUser) {
+        setIsLoading(false);
+        setError("Access Denied: You must be logged in to view this page.");
     }
-  }, [authLoading, isAdmin, fetchBookings]);
+  }, [authLoading, isAdmin, authUser, fetchBookings]);
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
@@ -88,19 +101,31 @@ export default function AdminDashboardPage() {
  };
 
 
-  if (authLoading || (isAdmin && isLoading && bookings.length === 0 && !error)) { 
+  if (authLoading || (isLoading && bookings.length === 0 && !error && authUser && isAdmin)) { 
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !authLoading) { // Check !authLoading here as well
     return (
       <div className="text-center py-12">
         <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view this page.</p>
+        <p className="text-muted-foreground">{error || "You do not have permission to view this page."}</p>
       </div>
     );
   }
+  
+  if (error && !isLoading) {
+     return (
+      <div className="text-center py-12">
+        <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-semibold mb-2">Error Loading Bookings</h1>
+        <p className="text-destructive px-4">{error}</p>
+        <Button onClick={fetchBookings} className="mt-4">Try Again</Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-8 py-8">
@@ -124,7 +149,6 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           {isLoading && bookings.length === 0 && !error && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
-          {error && !isLoading && <p className="text-destructive text-center py-4">{error}</p>}
           {!isLoading && !error && bookings.length === 0 && (
             <p className="text-muted-foreground text-center py-10">No service bookings found.</p>
           )}
@@ -182,3 +206,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
