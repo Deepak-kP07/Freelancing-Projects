@@ -25,16 +25,13 @@ export default function UserDashboardPage() {
     if (authUser?.email) {
       setIsLoadingBookings(true);
       setError(null);
+      console.log(`UserDashboardPage: Calling getUserBookings for user: ${authUser.email}`);
       getUserBookings(authUser.email)
         .then(data => {
           setBookings(data);
         })
         .catch(err => {
-          console.error("Error fetching user bookings in UserDashboardPage:", err);
-          // err.message from actions.ts is already "Failed to fetch your bookings: ${rawError.message} (Code: ${rawError.code}). ${specificGuidance}"
-          // The user wants the final error string to be:
-          // "Failed to load your bookings: Failed to fetch your bookings: ... . Check console for details."
-          // So, we prepend "Failed to load your bookings: " and append ". Check console for details." to the message from actions.ts
+          console.error("UserDashboardPage: Error received from getUserBookings:", err);
           setError(`Failed to load your bookings: ${err.message}. Check console for details.`);
         })
         .finally(() => {
@@ -43,6 +40,7 @@ export default function UserDashboardPage() {
     } else if (!authLoading && !authUser) {
       setIsLoadingBookings(false);
       setError("Please log in to view your dashboard.");
+      console.log("UserDashboardPage: No authenticated user found. Auth loading state:", authLoading);
     }
   }, [authUser, authLoading]);
 
@@ -130,16 +128,6 @@ export default function UserDashboardPage() {
           {isLoadingBookings && (
             <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           )}
-          
-          {/* Error display is now handled in CardHeader, so no need for a separate block here unless a different style is desired. */}
-          {/* For example, if you still wanted a larger, centered error icon in content despite header message:
-            {error && !isLoadingBookings && (
-              <div className="text-center py-10">
-                <AlertCircle className="mx-auto h-12 w-12 text-destructive/70 mb-3" />
-                <p className="text-sm text-muted-foreground">Details provided in the header above.</p>
-              </div>
-            )}
-          */}
           
           {!isLoadingBookings && !error && bookings.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">

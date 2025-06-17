@@ -73,8 +73,6 @@ async function getNextBookingDisplayId(): Promise<{ displayId?: string; error?: 
   console.log(`getNextBookingDisplayId: Initiating operation for ${COUNTER_COLLECTION}/${SERVICE_BOOKING_COUNTER_DOC}`);
 
   try {
-    // Firestore transaction to safely increment the counter
-    // This is the part most likely to fail if request.auth is null in server actions
     await runTransaction(db, async (transaction) => {
       console.log(`getNextBookingDisplayId: Transaction callback started.`);
       const counterDoc = await transaction.get(counterRef);
@@ -118,7 +116,7 @@ export async function bookServiceAction(
     email: formData.get('email'),
     phone: formData.get('phone'),
     serviceType: formData.get('serviceType'),
-    preferredDate: formData.get('preferredDate'), // This will be a string from FormData
+    preferredDate: formData.get('preferredDate'),
     preferredTime: formData.get('preferredTime'),
   };
   console.log("bookServiceAction: Raw form data:", rawData);
@@ -136,11 +134,9 @@ export async function bookServiceAction(
   const { name, email, phone, serviceType, preferredDate, preferredTime } = validatedFields.data;
   console.log("bookServiceAction: Validation successful for user email from form:", email);
 
-  // Get the next display ID
   const idResult = await getNextBookingDisplayId();
   if (idResult.error || !idResult.displayId) {
     console.error('bookServiceAction: Failed to generate booking ID. Error from getNextBookingDisplayId:', idResult.error, "Raw Firestore error (if any):", idResult.rawError);
-    // Ensure the error message is user-friendly and passed to the form
     const errorMessage = idResult.error || 'Booking failed: Could not generate a booking ID. Please try again.';
     return {
       message: errorMessage,
@@ -151,18 +147,17 @@ export async function bookServiceAction(
   const displayId = idResult.displayId;
   console.log("bookServiceAction: Successfully generated booking Display ID:", displayId);
 
-  // Prepare data for Firestore
   const newBookingData = {
     name,
-    email, // User's email from form (used for associating booking)
+    email, 
     phone,
     serviceType,
-    preferredDate: Timestamp.fromDate(new Date(preferredDate)), // Convert Date to Firestore Timestamp
+    preferredDate: Timestamp.fromDate(new Date(preferredDate)),
     preferredTime,
     displayId,
-    userEmail: email, // Store the email of the user who made the booking
-    status: SERVICE_STATUSES[0], // Initial status
-    bookedAt: serverTimestamp(), // Firestore server-side timestamp
+    userEmail: email, 
+    status: SERVICE_STATUSES[0], 
+    bookedAt: serverTimestamp(), 
   };
 
   try {
@@ -172,62 +167,58 @@ export async function bookServiceAction(
     return {
       message: `Service booked successfully! Your Booking ID is ${displayId}. We will contact you shortly to confirm.`,
       success: true,
-      bookingId: displayId, // Return the displayId for potential use in UI
+      bookingId: displayId, 
     };
   } catch (error: any) {
     console.error("!!! Unhandled error in bookServiceAction while adding document to 'serviceBookings' !!!", error);
     let userMessage = `An unexpected server error occurred while saving your booking: ${error.message}. Please check server logs.`;
-    if (error.code) { // Firebase errors have a 'code' property
+    if (error.code) {
       userMessage = `A server error occurred: ${error.message} (Code: ${error.code}).`;
       if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED' || error.message?.toLowerCase().includes('permission')) {
          userMessage += " This indicates a Firestore permission issue (e.g., 'request.auth' was null or rules for 'serviceBookings' collection are too restrictive for 'create'). Check Firestore rules and ensure the server action is running with user authentication context.";
       }
     }
-    // Return form-wide error
     return { message: userMessage, success: false, errors: { _form: [userMessage] } };
   }
 }
 
-// Helper function to process a booking document snapshot from Firestore
 const processBookingDoc = (docSnapshot: any): ServerBooking => {
     const data = docSnapshot.data();
     return {
       id: docSnapshot.id,
-      displayId: data.displayId || `OZN-OLD-${docSnapshot.id.substring(0,4)}`, // Fallback for old data without displayId
+      displayId: data.displayId || `OZN-OLD-${docSnapshot.id.substring(0,4)}`,
       name: data.name,
       email: data.email,
       phone: data.phone,
       serviceType: data.serviceType,
-      // Ensure preferredDate and bookedAt are converted from Firestore Timestamps to JS Dates
       preferredDate: data.preferredDate instanceof Timestamp ? data.preferredDate.toDate() : new Date(data.preferredDate),
       preferredTime: data.preferredTime,
-      userEmail: data.userEmail, // Email of the user who made the booking
+      userEmail: data.userEmail,
       status: data.status,
-      bookedAt: data.bookedAt instanceof Timestamp ? data.bookedAt.toDate() : new Date(data.bookedAt || Date.now()), // Fallback for old data
+      bookedAt: data.bookedAt instanceof Timestamp ? data.bookedAt.toDate() : new Date(data.bookedAt || Date.now()),
     };
 };
 
-// Fetches bookings for a specific user
 export async function getUserBookings(userEmail: string): Promise<ServerBooking[]> {
-  console.log(`getUserBookings: Attempting to fetch Firestore bookings for email: ${userEmail}`);
+  console.log(`actions.ts - getUserBookings: Attempting to fetch Firestore bookings for userEmail parameter: '${userEmail}'`);
   if (!userEmail) {
-      console.warn("getUserBookings: Called with no userEmail provided. Returning empty array.");
+      console.warn("actions.ts - getUserBookings: Called with no userEmail provided. Returning empty array.");
       return [];
   }
   const bookingsCol = collection(db, 'serviceBookings');
-  // Query for bookings where 'userEmail' matches and order by 'bookedAt'
   const q = query(bookingsCol, where('userEmail', '==', userEmail), orderBy('bookedAt', 'desc'));
   
   try {
+    console.log(`actions.ts - getUserBookings: Executing Firestore query for userEmail: '${userEmail}'`);
     const querySnapshot = await getDocs(q);
     const bookings = querySnapshot.docs.map(docSnap => processBookingDoc(docSnap));
-    console.log(`getUserBookings: Found ${bookings.length} Firestore bookings for ${userEmail}.`);
+    console.log(`actions.ts - getUserBookings: Successfully found ${bookings.length} Firestore bookings for ${userEmail}.`);
     return bookings;
   } catch (error: any) {
-    console.error(`getUserBookings: Raw error object from Firestore for ${userEmail}:`, error);
+    console.error(`actions.ts - getUserBookings: Raw error object from Firestore for ${userEmail}:`, error);
     const errorCode = error.code || 'UNKNOWN_CODE';
     const errorMessage = error.message || 'Unknown Firestore error.';
-    console.error(`getUserBookings: Error fetching user bookings from Firestore for ${userEmail}. Code: ${errorCode}, Message: ${errorMessage}`);
+    console.error(`actions.ts - getUserBookings: Error fetching user bookings from Firestore for ${userEmail}. Code: ${errorCode}, Message: ${errorMessage}`);
 
     let detailMessage = `Failed to fetch your bookings: ${errorMessage} (Code: ${errorCode}).`;
     if (errorCode === 'permission-denied' || errorCode === 'PERMISSION_DENIED') {
@@ -235,20 +226,17 @@ export async function getUserBookings(userEmail: string): Promise<ServerBooking[
     } else if (errorCode === 'failed-precondition' && errorMessage.toLowerCase().includes('index')) {
         detailMessage += " This query requires a Firestore index. Check server logs or browser console for a Firebase link to create it (usually on 'userEmail' (asc) and 'bookedAt' (desc) for the 'serviceBookings' collection).";
     }
-    // Log the detailed message that will be thrown
-    console.error("getUserBookings: Throwing error with detailed message:", detailMessage);
+    console.error("actions.ts - getUserBookings: Throwing error with detailed message:", detailMessage);
     throw new Error(detailMessage);
   }
 }
 
-// Helper to check if current user (based on email) is an admin
 async function isUserAdmin(currentUserEmail: string | null | undefined): Promise<boolean> {
   if (!currentUserEmail) return false;
-  return ADMIN_EMAIL.includes(currentUserEmail); // ADMIN_EMAIL is an array from constants.ts
+  return ADMIN_EMAIL.includes(currentUserEmail); 
 }
 
 
-// Fetches all bookings (for admin dashboard)
 export async function getAllBookings(currentUserEmail: string | null | undefined): Promise<ServerBooking[] | { error: string }> {
   console.log(`getAllBookings: Attempting as user: ${currentUserEmail || 'undefined/unauthenticated'}`);
   
@@ -261,7 +249,7 @@ export async function getAllBookings(currentUserEmail: string | null | undefined
 
   console.log(`getAllBookings: Admin ${currentUserEmail} attempting to fetch all bookings from Firestore.`);
   const bookingsCol = collection(db, 'serviceBookings');
-  const q = query(bookingsCol, orderBy('bookedAt', 'desc')); // Order all bookings by date
+  const q = query(bookingsCol, orderBy('bookedAt', 'desc')); 
 
   try {
     const querySnapshot = await getDocs(q);
@@ -285,7 +273,6 @@ export async function getAllBookings(currentUserEmail: string | null | undefined
   }
 }
 
-// Updates the status of a specific booking (for admin use)
 export async function updateBookingStatus(
   bookingId: string,
   newStatus: string,
@@ -324,3 +311,4 @@ export async function updateBookingStatus(
     return { success: false, message };
   }
 }
+

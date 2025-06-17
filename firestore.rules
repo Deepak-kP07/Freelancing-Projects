@@ -5,39 +5,45 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Function to identify admin users
-    // IMPORTANT: Replace with your actual admin email(s)
+    // IMPORTANT: Replace with your actual admin email(s) if they differ from constants.ts
     function isAdmin() {
-      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com']; // <<< REPLACE THESE WITH YOUR ADMIN EMAILS
+      let adminEmails = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com']; // Ensure this matches your ADMIN_EMAIL constant
       return request.auth != null && request.auth.token.email in adminEmails;
     }
 
     // Users collection:
-    // - A user can read their own profile.
-    // - A user can create and update their own profile.
+    // - A user can read, create, and update their own profile.
     match /users/{userId} {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
-      // If admins need to read any user profile, you might add:
-      // allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      // However, for now, the above rule is common for user-specific profiles.
     }
 
     // Service Bookings collection:
-    // - Authenticated users can create bookings if the userEmail in the booking matches their own.
-    // - Users can read their own bookings. Admins can read any booking.
-    // - Admins can list all bookings (for the admin dashboard).
-    // - Admins can update any booking (e.g., status).
     match /serviceBookings/{bookingId} {
+      // Authenticated users can create bookings if the userEmail in the booking matches their own.
       allow create: if request.auth != null && request.resource.data.userEmail == request.auth.token.email;
+
+      // Users can read their own bookings. Admins can read any booking.
       allow read: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
-      allow list: if request.auth != null && isAdmin(); // For admin dashboard to get all bookings
-      allow update: if request.auth != null && isAdmin(); // For admin to update status
+
+      // Admins can update any booking (e.g., status).
+      allow update: if request.auth != null && isAdmin();
+
       // Deletion can be restricted, e.g., only by admins or not at all.
       // allow delete: if request.auth != null && isAdmin();
     }
 
+    // This rule allows authenticated users to perform list operations (queries)
+    // on the serviceBookings collection. The actual documents returned will
+    // still be checked against the per-document 'read' rule above.
+    // This is crucial for getUserBookings to work for non-admins.
+    match /serviceBookings/{document=**} {
+      allow list: if request.auth != null;
+    }
+
+
     // Counters collection for booking ID generation:
-    // - Any authenticated user can read and write this specific document.
-    // - This is necessary for the transaction in getNextBookingDisplayId to succeed.
+    // - Any authenticated user needs to be able to read and write this specific document
+    //   for the transaction in getNextBookingDisplayId to succeed.
     match /counters/serviceBookingCounter {
       allow read, write: if request.auth != null;
     }
