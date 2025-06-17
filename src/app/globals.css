@@ -30,8 +30,8 @@ body {
     --secondary: 210 40% 90%; /* Light cool gray for secondary elements */
     --secondary-foreground: 175 65% 30%; /* Darker teal for secondary text, for consistency */
 
-    --accent: 250 65% 60%; /* A refined violet/purple accent - kept as is */
-    --accent-foreground: 0 0% 100%;
+    --accent: 175 65% 40%; /* ACCENT IS NOW PRIMARY: New Teal Primary */
+    --accent-foreground: 0 0% 100%; /* ACCENT FG IS NOW PRIMARY FG: White text on primary */
 
     --destructive: 0 70% 50%; /* Softer red for destructive actions */
     --destructive-foreground: 0 0% 100%;
@@ -39,7 +39,7 @@ body {
     --ring: 175 65% 40%; /* New Teal for rings */
     
     --chart-1: 175 65% 40%; /* New Teal */
-    --chart-2: 250 65% 60%; /* Accent Purple */
+    --chart-2: 210 40% 90%; /* NOW SECONDARY: Light cool gray */
     --chart-3: 190 60% 45%; /* A muted teal/green */
     --chart-4: 30 80% 60%; /* A muted orange */
     --chart-5: 120 40% 55%; /* A muted green */
@@ -49,8 +49,8 @@ body {
     --sidebar-foreground: 215 30% 20%;
     --sidebar-primary: 175 65% 40%; /* New Teal */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 65% 60%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-accent: 175 65% 40%; /* SIDEBAR ACCENT IS NOW PRIMARY */
+    --sidebar-accent-foreground: 0 0% 100%; /* SIDEBAR ACCENT FG IS NOW PRIMARY FG */
     --sidebar-border: 210 20% 85%;
     --sidebar-ring: 175 65% 40%; /* New Teal */
 
@@ -81,8 +81,8 @@ body {
     --secondary: 220 15% 25%; /* Dark secondary elements */
     --secondary-foreground: 175 60% 70%; /* Lighter teal for dark secondary text */
 
-    --accent: 250 60% 70%; /* Brighter accent for dark mode - kept as is */
-    --accent-foreground: 220 10% 10%;
+    --accent: 175 60% 55%; /* ACCENT IS NOW PRIMARY: Brighter Teal for dark mode primary */
+    --accent-foreground: 210 40% 98%; /* ACCENT FG IS NOW PRIMARY FG: Very light off-white text */
 
     --destructive: 0 60% 55%; /* Destructive for dark mode */
     --destructive-foreground: 0 0% 100%;
@@ -90,7 +90,7 @@ body {
     --ring: 175 60% 55%; /* Brighter Teal for rings */
     
     --chart-1: 175 60% 55%; /* Brighter Teal */
-    --chart-2: 250 60% 70%; /* Accent Purple */
+    --chart-2: 220 15% 25%; /* NOW SECONDARY: Dark secondary elements */
     --chart-3: 190 50% 55%;
     --chart-4: 30 70% 65%;
     --chart-5: 120 35% 60%;
@@ -99,8 +99,8 @@ body {
     --sidebar-foreground: 210 30% 80%;
     --sidebar-primary: 175 60% 55%; /* Brighter Teal */
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 250 60% 70%;
-    --sidebar-accent-foreground: 220 10% 10%;
+    --sidebar-accent: 175 60% 55%; /* SIDEBAR ACCENT IS NOW PRIMARY */
+    --sidebar-accent-foreground: 210 40% 98%; /* SIDEBAR ACCENT FG IS NOW PRIMARY FG */
     --sidebar-border: 220 15% 23%;
     --sidebar-ring: 175 60% 55%; /* Brighter Teal */
 
@@ -127,5 +127,59 @@ body {
   }
   code, pre {
     @apply font-code;
+  }
+}
+
+/* Water Animation specific styles */
+.water-animation-container {
+  width: 100%;
+  height: 60px; /* Adjust height as needed */
+  position: relative;
+  overflow: hidden;
+  margin-top: -60px; /* Pull it up to overlap slightly with content above if footer has padding */
+}
+
+.water-wave {
+  position: absolute;
+  width: 200%; /* Wider than container to allow for horizontal movement */
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+  animation: wave-flow 10s linear infinite;
+  opacity: 0.7;
+}
+
+.water-wave1 {
+  background-image: 
+    radial-gradient(circle at 50% -20%, hsla(var(--primary), 0.5) 0%, hsla(var(--primary), 0.5) 30%, transparent 70%),
+    radial-gradient(circle at 10% -15%, hsla(var(--primary), 0.6) 0%, hsla(var(--primary), 0.6) 25%, transparent 60%),
+    radial-gradient(circle at 90% -15%, hsla(var(--primary), 0.6) 0%, hsla(var(--primary), 0.6) 25%, transparent 60%);
+  background-size: 50% 100px, 40% 80px, 40% 80px; /* Adjust sizes for wave shapes */
+  bottom: 0;
+  animation-duration: 10s;
+  border-top-left-radius: 50% 20px;
+  border-top-right-radius: 50% 20px;
+}
+
+.water-wave2 {
+   background-image: 
+    radial-gradient(circle at 30% -25%, hsla(var(--primary), 0.3) 0%, hsla(var(--primary), 0.3) 35%, transparent 75%),
+    radial-gradient(circle at 70% -20%, hsla(var(--primary), 0.4) 0%, hsla(var(--primary), 0.4) 30%, transparent 65%);
+  background-size: 60% 120px, 55% 90px; /* Adjust sizes for wave shapes */
+  bottom: 5px; /* Slightly offset from the first wave */
+  animation-duration: 15s; /* Different duration for variation */
+  animation-direction: reverse;
+  opacity: 0.5;
+  border-top-left-radius: 60% 25px;
+  border-top-right-radius: 60% 25px;
+}
+
+
+@keyframes wave-flow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Moves one full wave width to the left */
   }
 }
