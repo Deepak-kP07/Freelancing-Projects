@@ -4,7 +4,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon, ShoppingCart, CalendarPlus, LayoutDashboard, Wrench } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,15 +12,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import Link from 'next/link';
+import { ADMIN_EMAIL } from '@/lib/constants';
 
 export default function AuthButton() {
-  const { signOutUser } = useAuth(); // Keep signOut method from context
+  const { signOutUser } = useAuth();
   const authUser = useSelector((state: RootState) => state.auth.user);
   const authLoading = useSelector((state: RootState) => state.auth.loading);
+  const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
   if (authLoading) {
     return <Button variant="outline" size="sm" disabled>Loading...</Button>;
@@ -30,26 +33,55 @@ export default function AuthButton() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <Avatar className="h-8 w-8">
+          <Button variant="ghost" className="relative h-9 w-9 rounded-full"> {/* Slightly larger avatar trigger */}
+            <Avatar className="h-9 w-9">
               <AvatarImage src={authUser.photoURL || undefined} alt={authUser.displayName || 'User'} />
               <AvatarFallback>
-                {authUser.displayName ? authUser.displayName.charAt(0).toUpperCase() : <UserIcon size={16} />}
+                {authUser.displayName ? authUser.displayName.charAt(0).toUpperCase() : <UserIcon size={18} />}
               </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className="w-64" align="end" forceMount> {/* Increased width for more items */}
           <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{authUser.displayName || 'User'}</p>
+            <div className="flex flex-col space-y-1 py-1">
+              <p className="text-sm font-medium leading-none">{authUser.displayName || 'User Profile'}</p>
               <p className="text-xs leading-none text-muted-foreground">
                 {authUser.email}
               </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={signOutUser}>
+          <DropdownMenuGroup>
+            <Link href="/dashboard/user" passHref>
+              <DropdownMenuItem>
+                <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
+                <span>My Dashboard</span>
+              </DropdownMenuItem>
+            </Link>
+             {isAdmin && (
+              <Link href="/dashboard/admin" passHref>
+                <DropdownMenuItem className="text-accent hover:!text-accent/80 focus:!bg-accent/10 focus:!text-accent">
+                  <LayoutDashboard className="mr-2 h-4 w-4 text-accent" />
+                  <span>Admin Dashboard</span>
+                </DropdownMenuItem>
+              </Link>
+            )}
+            <Link href="/services" passHref>
+              <DropdownMenuItem>
+                <Wrench className="mr-2 h-4 w-4 text-primary" /> {/* CalendarPlus might be better if "My Bookings" was separate */}
+                <span>Book New Service</span>
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/cart" passHref>
+              <DropdownMenuItem>
+                <ShoppingCart className="mr-2 h-4 w-4 text-primary" />
+                <span>View Cart</span>
+              </DropdownMenuItem>
+            </Link>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={signOutUser} className="text-destructive hover:!text-destructive focus:!bg-destructive/10 focus:!text-destructive">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
@@ -67,3 +99,4 @@ export default function AuthButton() {
     </Link>
   );
 }
+
