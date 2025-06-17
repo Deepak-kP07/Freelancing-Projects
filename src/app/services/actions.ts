@@ -27,8 +27,8 @@ export type ServerBooking = BookingFormData & {
   displayId: string;
   userEmail: string;
   status: string;
-  bookedAt: Date;
-  preferredDate: Date;
+  bookedAt: Date; // Ensure this is Date for client-side
+  preferredDate: Date; // Ensure this is Date for client-side
 };
 
 export interface BookingFormState {
@@ -42,6 +42,7 @@ export interface BookingFormState {
     preferredTime?: string[];
   };
   success: boolean;
+  bookingId?: string;
 }
 
 const COUNTER_COLLECTION = 'counters';
@@ -76,7 +77,7 @@ async function getNextBookingDisplayId(): Promise<{ displayId?: string; error?: 
     console.error("Error Message From Firestore:", error.message);
     console.error("Full Firestore error object:", error);
 
-    let detailMessage = `Firestore operation failed in getNextBookingDisplayId: ${error.message} (Code: ${error.code}).`;
+    let detailMessage = `Failed to generate booking ID. Firestore operation error: ${error.message} (Code: ${error.code}).`;
     if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED' || error.message?.toLowerCase().includes('permission')) {
         detailMessage += " This often means 'request.auth' was null when Firestore rules expected an authenticated user, or rules don't allow read/write on 'counters/serviceBookingCounter'. Check Firestore rules and ensure the server action is running with user authentication context.";
     }
@@ -118,7 +119,7 @@ export async function bookServiceAction(
   if (idResult.error || !idResult.displayId) {
     console.error('bookServiceAction: Failed to generate booking ID. Error from getNextBookingDisplayId:', idResult.error, "Raw Firestore error (if any):", idResult.rawError);
     return {
-      message: `Booking failed: ${idResult.error || 'Unknown error generating booking ID.'} Please try again.`,
+      message: idResult.error || 'Booking failed: Unknown error generating booking ID. Please try again.',
       success: false,
     };
   }
@@ -130,11 +131,11 @@ export async function bookServiceAction(
     email,
     phone,
     serviceType,
-    preferredDate: Timestamp.fromDate(new Date(preferredDate)), // Convert to Firestore Timestamp
+    preferredDate: Timestamp.fromDate(new Date(preferredDate)),
     preferredTime,
     displayId,
-    userEmail: email, // For querying user's bookings
-    status: SERVICE_STATUSES[0], // Default status: "Pending Confirmation"
+    userEmail: email,
+    status: SERVICE_STATUSES[0],
     bookedAt: serverTimestamp(),
   };
 
@@ -144,7 +145,8 @@ export async function bookServiceAction(
     console.log('bookServiceAction: New Booking Added to Firestore with Doc ID:', docRef.id, 'Display ID:', displayId, "for user:", email);
     return {
       message: `Service booked successfully! Your Booking ID is ${displayId}. We will contact you shortly to confirm.`,
-      success: true
+      success: true,
+      bookingId: displayId,
     };
   } catch (error: any) {
     console.error("!!! Unhandled error in bookServiceAction while adding document !!!", error);
@@ -162,11 +164,18 @@ export async function bookServiceAction(
 const processBookingDoc = (docSnapshot: any): ServerBooking => {
     const data = docSnapshot.data();
     return {
-      ...data,
       id: docSnapshot.id,
-      bookedAt: data.bookedAt instanceof Timestamp ? data.bookedAt.toDate() : new Date(data.bookedAt),
+      displayId: data.displayId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      serviceType: data.serviceType,
       preferredDate: data.preferredDate instanceof Timestamp ? data.preferredDate.toDate() : new Date(data.preferredDate),
-    } as ServerBooking;
+      preferredTime: data.preferredTime,
+      userEmail: data.userEmail,
+      status: data.status,
+      bookedAt: data.bookedAt instanceof Timestamp ? data.bookedAt.toDate() : new Date(data.bookedAt),
+    };
 };
 
 export async function getUserBookings(userEmail: string): Promise<ServerBooking[]> {
@@ -184,14 +193,14 @@ export async function getUserBookings(userEmail: string): Promise<ServerBooking[
     console.log(`getUserBookings: Found ${bookings.length} Firestore bookings for ${userEmail}.`);
     return bookings;
   } catch (error: any) {
-    console.error(`getUserBookings: Error fetching user bookings from Firestore for ${userEmail}: `, error.code, error.message, error);
+    console.error(`getUserBookings: Error fetching user bookings from Firestore for ${userEmail}. Code: ${error.code}, Message: ${error.message}`, error);
+    let detailMessage = `Failed to fetch your bookings: ${error.message} (Code: ${error.code}).`;
     if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
-        console.error("getUserBookings: PERMISSION_DENIED. This often means 'request.auth' was null or Firestore rules don't allow users to read bookings where 'userEmail' matches their own (e.g., request.auth.token.email == resource.data.userEmail).");
-    } else if (error.code === 'failed-precondition' && error.message?.includes('index')) {
-        console.error("getUserBookings: Missing Firestore index. The query requires an index on 'userEmail' (asc) and 'bookedAt' (desc) for 'serviceBookings'. Check server logs or browser console for a Firebase link to create it.");
+        detailMessage += " This often means 'request.auth' was null or Firestore rules don't allow users to read bookings where 'userEmail' matches their own (e.g., request.auth.token.email == resource.data.userEmail).";
+    } else if (error.code === 'failed-precondition' && error.message?.toLowerCase().includes('index')) {
+        detailMessage += " This query requires a Firestore index. Check server logs or browser console for a Firebase link to create it (usually on 'userEmail' and 'bookedAt' for the 'serviceBookings' collection).";
     }
-    // Rethrow the error so the calling component can catch it and display a message
-    throw new Error(`Failed to fetch your bookings: ${error.message} (Code: ${error.code})`);
+    throw new Error(detailMessage);
   }
 }
 
@@ -218,13 +227,14 @@ export async function getAllBookings(currentUserEmail: string | null | undefined
     console.log(`getAllBookings: Admin ${currentUserEmail} successfully fetched ${bookings.length} bookings.`);
     return bookings;
   } catch (error: any) {
-    console.error(`getAllBookings: Error fetching all bookings from Firestore for admin ${currentUserEmail}: `, error.code, error.message, error);
+    console.error(`getAllBookings: Error fetching all bookings from Firestore for admin ${currentUserEmail}. Code: ${error.code}, Message: ${error.message}`, error);
     let detailedError = `Failed to fetch bookings from database: ${error.message} (Code: ${error.code}).`;
     if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
         detailedError += " This often means 'request.auth' was null for the admin user in Firestore rules, or the rules do not grant 'list' permission to admins (via isAdmin() in rules) for the 'serviceBookings' collection. Verify Firestore rules and ensure the admin user is properly authenticated when this action runs.";
-    } else if (error.code === 'failed-precondition' && error.message?.includes('index')) {
-        detailedError += " A Firestore index is required for the query (likely ordering by 'bookedAt'). Check server logs or browser console for a Firebase link to create it. Index: 'bookedAt' (desc) for 'serviceBookings'.";
+    } else if (error.code === 'failed-precondition' && error.message?.toLowerCase().includes('index')) {
+        detailedError += " A Firestore index is required for this query. Check server logs or browser console for a Firebase link to create it (usually on 'bookedAt' (desc) for 'serviceBookings' collection).";
     }
+    detailedError += " This often means Firestore security rules are denying access. Ensure the isAdmin() function in your Firestore rules (Firebase Console -> Firestore -> Rules) correctly includes your admin email and allows 'list' and 'read' operations on 'serviceBookings'. Also check server logs (terminal or Firebase Functions logs) for specific Firebase errors (e.g., missing indexes).";
     return { error: detailedError };
   }
 }
@@ -254,7 +264,7 @@ export async function updateBookingStatus(
     console.log(`updateBookingStatus: Admin ${currentUserEmail} successfully updated booking ${bookingId} to status ${newStatus} in Firestore.`);
     return { success: true, message: `Booking status updated to ${newStatus}.` };
   } catch (error: any) {
-    console.error(`updateBookingStatus: Error updating booking status in Firestore for booking ${bookingId} by admin ${currentUserEmail}: `, error.code, error.message, error);
+    console.error(`updateBookingStatus: Error updating booking status in Firestore for booking ${bookingId} by admin ${currentUserEmail}. Code: ${error.code}, Message: ${error.message}`, error);
     let message = `Failed to update booking status: ${error.message} (Code: ${error.code}).`;
     if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
         message += " This indicates a Firestore permission issue for the admin user. Ensure Firestore rules allow admins to update 'serviceBookings' documents and 'request.auth' is not null.";
@@ -262,5 +272,5 @@ export async function updateBookingStatus(
     return { success: false, message };
   }
 }
-
+    
     
