@@ -27,9 +27,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const discountPercentage = hasDiscount
+    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+    : 0;
+
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 relative">
         <div className="relative w-full h-48 md:h-56">
           <Image
             src={product.imageUrl}
@@ -39,11 +44,21 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
+        {hasDiscount && (
+          <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-md">
+            {discountPercentage}% OFF
+          </div>
+        )}
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-xl font-headline mb-1 truncate" title={product.name}>{product.name}</CardTitle>
-        <CardDescription className="text-sm text-foreground/70 mb-2 line-clamp-2">{product.description}</CardDescription>
-        <p className="text-lg font-semibold text-primary">&#x20B9;{product.price.toFixed(2)}</p>
+        <CardDescription className="text-sm text-foreground/70 mb-2 line-clamp-2 h-10">{product.description}</CardDescription>
+        <div className="flex items-baseline gap-2 mt-2">
+          <p className="text-lg font-semibold text-primary">&#x20B9;{product.price.toFixed(2)}</p>
+          {hasDiscount && (
+            <p className="text-sm text-muted-foreground line-through">&#x20B9;{product.originalPrice!.toFixed(2)}</p>
+          )}
+        </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button onClick={handleAddToCart} className="w-full">

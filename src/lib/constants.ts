@@ -5,7 +5,8 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: number; // This will be the final/discounted price
+  originalPrice?: number; // Optional: The price before discount
   imageUrl: string;
   dataAiHint: string;
   category: string;
@@ -17,6 +18,7 @@ export const PRODUCTS: Product[] = [
     name: 'Ozonxt Home Purifier X100',
     description: 'Advanced multi-stage home water purifier with ozone disinfection. Ideal for families.',
     price: 299.99,
+    originalPrice: 349.99,
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'home purifier',
     category: 'Home Purifiers',
@@ -26,6 +28,7 @@ export const PRODUCTS: Product[] = [
     name: 'Ozonxt Commercial Purifier C500',
     description: 'High-capacity water purification system for commercial use. Ensures safe water for your business.',
     price: 1299.99,
+    originalPrice: 1599.99,
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'commercial purifier',
     category: 'Commercial Purifiers',
@@ -35,6 +38,7 @@ export const PRODUCTS: Product[] = [
     name: 'Ozonxt Portable Bottle',
     description: 'Purifying water bottle with built-in ozone tech. Clean water on the go.',
     price: 79.99,
+    originalPrice: 99.99,
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'filter bottle',
     category: 'Accessories',
@@ -43,7 +47,7 @@ export const PRODUCTS: Product[] = [
     id: '4',
     name: 'Replacement Filter Pack',
     description: 'Pack of 3 replacement filters for Ozonxt Home Purifier X100.',
-    price: 49.99,
+    price: 49.99, // No discount for this one
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'water cartridges',
     category: 'Accessories',
@@ -53,6 +57,7 @@ export const PRODUCTS: Product[] = [
     name: 'Ozonxt Shower Filter',
     description: 'Enjoy ozonated, pure water in your shower. Reduces chlorine and impurities.',
     price: 89.99,
+    originalPrice: 109.99,
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'shower filter',
     category: 'Home Purifiers',
@@ -62,6 +67,7 @@ export const PRODUCTS: Product[] = [
     name: 'Industrial Ozone Generator I-1000',
     description: 'Powerful ozone generator for large-scale water treatment and sanitation.',
     price: 2500.00,
+    originalPrice: 2999.00,
     imageUrl: 'https://placehold.co/600x400.png',
     dataAiHint: 'ozone machine',
     category: 'Commercial Purifiers',
