@@ -53,6 +53,10 @@ body {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 20% 85%;
     --sidebar-ring: 175 65% 40%; /* New Teal */
+
+    /* Gradient colors for body background */
+    --gradient-start-color: hsl(var(--background));
+    --gradient-end-color: hsl(175, 60%, 94%); /* Very light teal for light mode */
   }
 
   .dark {
@@ -99,6 +103,10 @@ body {
     --sidebar-accent-foreground: 220 10% 10%;
     --sidebar-border: 220 15% 23%;
     --sidebar-ring: 175 60% 55%; /* Brighter Teal */
+
+    /* Gradient colors for body background - dark mode */
+    --gradient-start-color: hsl(var(--background)); /* Will correctly use the dark background */
+    --gradient-end-color: hsl(175, 30%, 15%); /* Very dark, subtly desaturated teal for dark mode */
   }
 }
 
@@ -107,7 +115,12 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Apply the gradient background */
+    background-color: var(--gradient-start-color); /* Fallback color */
+    background-image: linear-gradient(to bottom, var(--gradient-start-color), var(--gradient-end-color));
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Ensures gradient covers full viewport height */
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
