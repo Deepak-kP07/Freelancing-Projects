@@ -9,6 +9,7 @@ import { useDispatch } from 'react-redux';
 import { addItem } from '@/store/cartSlice';
 import { useToast } from '@/hooks/use-toast';
 import { ShoppingCart, Sparkles } from 'lucide-react';
+import { formatCurrencyINR } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -52,9 +53,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         <CardTitle className="text-lg font-headline mb-1 group-hover:text-primary transition-colors line-clamp-1" title={product.name}>{product.name}</CardTitle> {/* Ensure title doesn't wrap too much */}
         <CardDescription className="text-sm text-muted-foreground mb-3 line-clamp-2 h-10">{product.description}</CardDescription>
         <div className="flex items-baseline gap-2 mt-auto pt-2">
-          <p className="text-xl font-semibold text-primary">&#x20B9;{product.price.toFixed(0)}</p>
-          {hasDiscount && (
-            <p className="text-sm text-muted-foreground line-through">&#x20B9;{product.originalPrice!.toFixed(0)}</p>
+          <p className="text-xl font-semibold text-primary">{formatCurrencyINR(product.price)}</p>
+          {hasDiscount && product.originalPrice && (
+            <p className="text-sm text-muted-foreground line-through">{formatCurrencyINR(product.originalPrice)}</p>
           )}
         </div>
       </CardContent>
