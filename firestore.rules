@@ -4,36 +4,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Function to identify admin users (update with your actual admin emails)
+    // Function to identify admin users
+    // IMPORTANT: Replace with your actual admin email(s)
     function isAdmin() {
-      // Replace with your actual admin email(s)
-      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com'];
+      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com']; // <<< REPLACE THESE WITH YOUR ADMIN EMAILS
       return request.auth != null && request.auth.token.email in adminEmails;
     }
 
-    // Users collection
+    // Users collection:
+    // - Authenticated users can read any user profile.
+    // - A user can create and update their own profile.
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Service Bookings collection
+    // Service Bookings collection:
+    // - Authenticated users can create bookings if the userEmail in the booking matches their own.
+    // - Users can read their own bookings. Admins can read any booking.
+    // - Admins can list all bookings (for the admin dashboard).
+    // - Admins can update any booking (e.g., status).
     match /serviceBookings/{bookingId} {
       allow create: if request.auth != null && request.resource.data.userEmail == request.auth.token.email;
-      // User can read their own bookings, admin can read any
       allow read: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
-      // Admin can list all bookings
       allow list: if request.auth != null && isAdmin();
-      // Admin can update any booking (e.g., status)
       allow update: if request.auth != null && isAdmin();
+      // Deletion can be restricted, e.g., only by admins or not at all.
+      // allow delete: if request.auth != null && isAdmin();
     }
 
-    // Counters collection for booking ID
+    // Counters collection for booking ID generation:
+    // - Any authenticated user can read and write this specific document.
+    // - This is necessary for the transaction in getNextBookingDisplayId to succeed.
     match /counters/serviceBookingCounter {
-      // Allow ANY authenticated user to read AND write this specific document.
-      // This is absolutely necessary for the booking ID generation transaction to succeed
-      // if request.auth is correctly propagated to the server action.
       allow read, write: if request.auth != null;
     }
   }
 }
+
+    

@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench } from 'lucide-react';
+import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench, Info } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function UserDashboardPage() {
@@ -31,14 +31,14 @@ export default function UserDashboardPage() {
         })
         .catch(err => {
           console.error("Error fetching user bookings in UserDashboardPage:", err);
-          setError("Failed to load your service bookings. Please try again later or contact support if the issue persists. Check browser console and server logs for more details.");
+          setError(`Failed to load your bookings: ${err.message}. Check console for details.`);
         })
         .finally(() => {
           setIsLoadingBookings(false);
         });
     } else if (!authLoading && !authUser) {
       setIsLoadingBookings(false);
-      // No error set here, handled by !authUser condition below
+      setError("Please log in to view your dashboard.");
     }
   }, [authUser, authLoading]);
 
@@ -46,18 +46,23 @@ export default function UserDashboardPage() {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
-  if (!authUser) {
+  if (!authUser && !authLoading) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Access Denied</h1>
-        <p className="text-muted-foreground">Please log in to view your dashboard.</p>
+        <p className="text-muted-foreground">{error || "Please log in to view your dashboard."}</p>
          <Link href="/login" passHref>
           <Button className="mt-4">Login</Button>
         </Link>
       </div>
     );
   }
+  
+  if (!authUser && authLoading) { // Still loading auth info
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+  }
+
 
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     if (status.toLowerCase().includes('completed')) return 'default';
@@ -78,16 +83,20 @@ export default function UserDashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={authUser.photoURL || undefined} alt={authUser.displayName || 'User'} />
-              <AvatarFallback>{authUser.displayName ? authUser.displayName.charAt(0).toUpperCase() : <User size={24} />}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-lg font-semibold">{authUser.displayName || 'N/A'}</p>
-              <p className="text-sm text-muted-foreground">{authUser.email}</p>
+          {authUser ? (
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={authUser.photoURL || undefined} alt={authUser.displayName || 'User'} />
+                <AvatarFallback>{authUser.displayName ? authUser.displayName.charAt(0).toUpperCase() : <User size={24} />}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-lg font-semibold">{authUser.displayName || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{authUser.email}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p>Loading profile...</p>
+          )}
         </CardContent>
       </Card>
 
@@ -102,10 +111,15 @@ export default function UserDashboardPage() {
         </CardHeader>
         <CardContent>
           {isLoadingBookings && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
-          {error && <p className="text-destructive text-center py-4">{error}</p>}
+          {error && !isLoadingBookings && (
+            <div className="text-center py-10 text-destructive">
+              <AlertCircle className="mx-auto h-12 w-12 mb-3" />
+              <p className="text-lg">{error}</p>
+            </div>
+          )}
           {!isLoadingBookings && !error && bookings.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">
-              <Wrench className="mx-auto h-12 w-12 mb-4 text-primary" />
+              <Info className="mx-auto h-12 w-12 mb-4 text-primary" />
               <p className="text-lg mb-2">You have no service bookings yet.</p>
               <p className="mb-6">Book one to see your updates here!</p>
               <Link href="/services" passHref>
@@ -154,3 +168,5 @@ export default function UserDashboardPage() {
     </div>
   );
 }
+
+    

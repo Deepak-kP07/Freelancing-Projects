@@ -40,13 +40,13 @@ export default function AdminDashboardPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAllBookings(authUser.email);
+      const result = await getAllBookings(authUser.email); // Pass admin email for server-side validation if needed
       if ('error' in result) {
-        let detailedError = result.error;
-        // Enhance error message to guide user
-        if (detailedError.includes("Failed to fetch bookings from database") || detailedError.includes("PERMISSION_DENIED") || detailedError.includes("request.auth")) {
-            detailedError += " This often means Firestore security rules are denying access. Ensure the isAdmin() function in your Firestore rules (Firebase Console -> Firestore -> Rules) correctly includes your admin email and allows 'list' and 'read' operations on 'serviceBookings'. Also check server logs (terminal or Firebase Functions logs) for specific Firebase errors (e.g., missing indexes).";
+        let detailedError = `Failed to fetch bookings from database: ${result.error}.`;
+        if (result.error.toLowerCase().includes("permission-denied") || result.error.toLowerCase().includes("request.auth")) {
+            detailedError += " This often means 'request.auth' was null for the admin user in Firestore rules, or the rules do not grant 'list' permission to admins (via isAdmin() in rules) for the 'serviceBookings' collection. Verify Firestore rules and ensure the admin user is properly authenticated when this action runs.";
         }
+        detailedError += " Also check server logs (terminal or Firebase Functions logs) for specific Firebase errors (e.g., missing indexes).";
         setError(detailedError);
         setBookings([]);
       } else {
@@ -62,16 +62,16 @@ export default function AdminDashboardPage() {
   }, [isAdmin, authUser]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading) { // Only proceed if auth state is resolved
         if (authUser && isAdmin) {
             fetchBookings();
         } else {
-            setIsLoading(false);
+            setIsLoading(false); // Stop loading as we won't fetch
             let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
             if (authUser && !isAdmin) accessDeniedReason = "Access Denied: You do not have permission to view this page. Ensure your email is in ADMIN_EMAIL constant and your Firestore rules' isAdmin() function correctly identifies you as an admin.";
             else if (!authUser) accessDeniedReason = "Access Denied: You must be logged in to view this page.";
             setError(accessDeniedReason);
-            setBookings([]);
+            setBookings([]); // Clear any existing bookings
             console.warn("AdminDashboard: Access denied. User:", authUser?.email, "Is admin (client-side):", isAdmin);
         }
     }
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
-  if (error && !isLoading) {
+  if (error && !isLoading) { // Display error only if not loading
      return (
       <div className="text-center py-12">
         <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
             <div className="text-center py-10 text-muted-foreground">
               <Info className="mx-auto h-12 w-12 mb-3 text-primary" />
               <p className="text-lg">No service bookings found in the system.</p>
-              <p className="text-sm mt-1">Once bookings are made, they will appear here.</p>
+              <p className="text-sm mt-1">Once bookings are made by users, they will appear here.</p>
             </div>
           )}
           {!isLoading && !error && bookings.length > 0 && (
@@ -210,3 +210,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
