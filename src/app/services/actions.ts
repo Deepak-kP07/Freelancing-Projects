@@ -27,10 +27,10 @@ export type BookingFormData = z.infer<typeof bookingSchema>;
 export type ServerBooking = BookingFormData & {
   id: string; // Firestore document ID
   displayId: string; // OZNxxxx
-  userEmail: string; 
+  userEmail: string;
   status: string;
-  bookedAt: Timestamp; // Firestore Timestamp
-  preferredDate: Timestamp; // Store as Firestore Timestamp
+  bookedAt: Date; // Changed to Date for client-side, was Firestore Timestamp from server
+  preferredDate: Date; // Changed to Date for client-side, was Firestore Timestamp from server
 };
 
 export interface BookingFormState {
@@ -65,9 +65,12 @@ async function getNextBookingDisplayId(): Promise<string> {
       }
     });
     return `OZN${String(newIdNumber).padStart(4, '0')}`;
-  } catch (error) {
-    console.error("Transaction failed: ", error);
-    // Fallback or rethrow, for now, let's throw to indicate a critical issue
+  } catch (error: any) {
+    console.error("Firestore transaction for booking ID generation failed.");
+    console.error("Error details:", error);
+    if (error.code && (error.code === 'permission-denied' || error.code === 'unauthenticated')) {
+        console.error("This is likely a Firestore Security Rule issue. Ensure that authenticated users have read AND write permissions on the document '", COUNTER_COLLECTION, "/", SERVICE_BOOKING_COUNTER_DOC, "'.");
+    }
     throw new Error("Could not generate booking ID.");
   }
 }
@@ -97,12 +100,21 @@ export async function bookServiceAction(
       };
     }
     
-    const displayId = await getNextBookingDisplayId();
+    let displayId;
+    try {
+        displayId = await getNextBookingDisplayId();
+    } catch (idError) {
+        // The detailed error is already logged in getNextBookingDisplayId
+        return {
+            message: 'Failed to generate booking ID. Please try again.', // This is the message the user is seeing
+            success: false,
+        };
+    }
 
     const newBookingData = {
       ...validatedFields.data,
       displayId,
-      userEmail: validatedFields.data.email, 
+      userEmail: validatedFields.data.email,
       status: SERVICE_STATUSES[0], // Default status: Pending Confirmation
       bookedAt: serverTimestamp(), // Use Firestore server timestamp
       preferredDate: Timestamp.fromDate(validatedFields.data.preferredDate), // Convert Date to Firestore Timestamp
@@ -113,11 +125,8 @@ export async function bookServiceAction(
 
     return { message: 'Service booked successfully! We will contact you shortly to confirm.', success: true };
   } catch (error) {
-    console.error('Service booking error:', error);
-    // Check if error is from getNextBookingDisplayId
-    if (error instanceof Error && error.message === "Could not generate booking ID.") {
-         return { message: 'Failed to generate booking ID. Please try again.', success: false };
-    }
+    // This catch block is for errors outside of getNextBookingDisplayId
+    console.error('Service booking error (outside ID generation):', error);
     return { message: 'An unexpected error occurred. Please try again later.', success: false };
   }
 }
@@ -201,3 +210,4 @@ export async function updateBookingStatus(
     return { success: false, message: "Failed to update booking status in database." };
   }
 }
+
