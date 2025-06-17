@@ -25,7 +25,7 @@ export default function HeroSection() {
         </div>
         <div className="relative h-64 md:h-96 rounded-lg overflow-hidden shadow-2xl group">
            <Image 
-            src="https://placehold.co/800x600.png" 
+            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750153579/Gemini_Generated_Image_kpthptkpthptkpth_u11jqk.png" 
             alt="Clean water stream" 
             fill={true}
             data-ai-hint="purified water stream"
