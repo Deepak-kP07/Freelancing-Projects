@@ -3,9 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-pt-sans), sans-serif;
-}
+/* 
+  The base body font is now applied via the `font-body` utility class 
+  on the <body> tag in layout.tsx, which uses `var(--font-pt-sans)` 
+  from `next/font` via tailwind.config.ts.
+  The explicit `font-family` rule here is no longer needed.
+*/
 
 @layer base {
   :root {
