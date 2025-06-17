@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench, Info } from 'lucide-react';
+import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench, Info, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function UserDashboardPage() {
@@ -103,26 +103,31 @@ export default function UserDashboardPage() {
       </Card>
 
       <Card className="shadow-lg">
-        <CardHeader>
+        <CardHeader className="flex flex-row justify-between items-center">
           {error && !isLoadingBookings ? (
-            <>
+            <div className="flex-grow">
               <CardTitle className="flex items-center gap-2 text-xl text-destructive">
                 <AlertCircle className="h-5 w-5" /> Error Loading Bookings
               </CardTitle>
-              <CardDescription className="text-destructive whitespace-pre-wrap">
+              <CardDescription className="text-destructive whitespace-pre-wrap mt-1">
                 {error}
               </CardDescription>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="flex-grow">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <ShoppingBag className="text-accent" /> Your Service Bookings
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 View the status and details of your scheduled services.
               </CardDescription>
-            </>
+            </div>
           )}
+          <Link href="/services" passHref>
+            <Button variant="outline">
+              <PlusCircle size={18} className="mr-2"/> {bookings.length > 0 ? 'Book Another Service' : 'Book New Service'}
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent>
           {isLoadingBookings && (
@@ -134,9 +139,7 @@ export default function UserDashboardPage() {
               <Info className="mx-auto h-12 w-12 mb-4 text-primary" />
               <p className="text-lg mb-2">You have no service bookings yet.</p>
               <p className="mb-6">Book one to see your updates here!</p>
-              <Link href="/services" passHref>
-                <Button>Book a Service</Button>
-              </Link>
+              {/* Button moved to CardHeader */}
             </div>
           )}
           {!isLoadingBookings && !error && bookings.length > 0 && (

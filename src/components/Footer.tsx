@@ -5,9 +5,15 @@ import Image from 'next/image';
 
 export default function Footer() {
   return (
-    <footer className="bg-card border-t border-border py-10 mt-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-card border-t border-border pt-10 mt-16 relative overflow-hidden"> {/* Added relative and overflow-hidden for animation */}
+      {/* Water Animation Container - Placed at the top of the footer */}
+      <div className="water-animation-container">
+        <div className="water-wave water-wave1"></div>
+        <div className="water-wave water-wave2"></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10"> {/* Added relative z-10 to keep content above animation */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8 pt-8"> {/* Added pt-8 to push content below animation */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={130} height={52} className='object-contain' data-ai-hint="water logo"/>
@@ -43,14 +49,14 @@ export default function Footer() {
               {/* Add other social links if available */}
             </div>
              <div className="mt-6">
-                <Link href="/developer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
-                  <Code size={16}/> Developer Info
+                <Link href="/developer" className="text-xs text-muted-foreground/70 hover:text-primary/80 transition-colors flex items-center gap-1.5">
+                  <Code size={14}/> Developer Info
                 </Link>
             </div>
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
+        <div className="border-t border-border pt-8 pb-8 text-center text-sm text-muted-foreground"> {/* Added pb-8 */}
           <p>&copy; {new Date().getFullYear()} Ozonxt. All rights reserved.</p>
         </div>
       </div>
