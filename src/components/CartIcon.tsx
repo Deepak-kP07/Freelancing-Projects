@@ -26,10 +26,10 @@ export default function CartIcon() {
 
   return (
     <Link href="/cart" passHref>
-      <Button variant="ghost" size="icon" className="relative">
+      <Button variant="ghost" size="icon" className="relative group"> {/* Added 'group' class */}
         <ShoppingCart className="h-5 w-5 text-primary" />
         {isClient && itemCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground group-hover:bg-accent-foreground group-hover:text-accent text-xs w-5 h-5 rounded-full flex items-center justify-center"> {/* Added group-hover classes */}
             {itemCount}
           </span>
         )}
