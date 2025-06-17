@@ -3,49 +3,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if the authenticated user is an admin
-    // IMPORTANT: Ensure these email addresses EXACTLY match your admin users' emails.
-    // For enhanced security in production, consider using custom claims for admin roles.
-    function isAdmin() {
-      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com'];
-      return request.auth != null && request.auth.token.email in adminEmails;
-    }
-
-    // Users collection:
-    // - Authenticated users can read any user's profile data.
-    // - Authenticated users can create and update their own profile document.
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      // Deleting user documents is typically handled by backend processes or admin actions.
-      allow delete: if false;
-    }
-
-    // Service Bookings collection:
-    // - Authenticated users can create new bookings.
-    // - Authenticated users can read their own bookings (get specific document).
-    // - Admin users can list all bookings (for admin dashboard).
-    // - Admin users can read any specific booking.
-    // - Admin users can update any booking's status or other details.
-    match /serviceBookings/{bookingId} {
-      allow create: if request.auth != null;
-      // Allows fetching a specific booking if the user is the owner or an admin.
-      allow get: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
-      // Allows admin to query the entire collection.
-      // User queries for their own bookings (e.g., where('userEmail', '==', email)) will be
-      // permitted if the 'get' rule allows access to the individual documents returned by the query.
-      allow list: if request.auth != null && isAdmin();
-      allow update: if request.auth != null && isAdmin(); // Only admin can update (e.g., status)
-      // Deleting bookings is typically an admin action or a specific user flow.
-      allow delete: if false;
-    }
-
-    // Counters collection for serviceBookingCounter:
-    // - Any authenticated user needs read and write access for the ID generation transaction.
-    // - For higher security in a production environment, this write operation should ideally
-    //   be handled by a Cloud Function with elevated privileges.
-    match /counters/serviceBookingCounter {
+    // Default rule: Allow read and write access to any authenticated user for all documents.
+    // WARNING: This is NOT secure for production.
+    // You should restrict access based on user roles and ownership of data.
+    match /{document=**} {
       allow read, write: if request.auth != null;
     }
   }
