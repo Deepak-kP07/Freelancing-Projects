@@ -50,14 +50,14 @@ export default function Header() {
   );
 
   return (
-    <header className="bg-background border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-1 flex items-center justify-between h-20"> {/* Increased height a bit */}
+    <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-1 flex items-center justify-between h-20">
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
           <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={150} height={60} className='object-contain' data-ai-hint="water logo" />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-x-4 lg:gap-x-5"> {/* Increased gap slightly */}
+        <nav className="hidden md:flex items-center gap-x-4 lg:gap-x-5">
           {commonNavLinks}
         </nav>
 
@@ -76,7 +76,7 @@ export default function Header() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6 flex flex-col bg-background">
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6 flex flex-col bg-background"> {/* Consider if sheet needs glassmorphism too */}
                 <SheetHeader className="pb-4 mb-4 border-b border-border">
                   <SheetTitle>
                     <Link href="/" className="flex items-center gap-2 text-primary" onClick={closeMobileMenu}>
@@ -85,7 +85,7 @@ export default function Header() {
                   </SheetTitle>
                 </SheetHeader>
                 
-                <nav className="flex flex-col gap-y-3 flex-grow"> {/* Increased gap slightly */}
+                <nav className="flex flex-col gap-y-3 flex-grow">
                   {commonNavLinks}
                 </nav>
                 
