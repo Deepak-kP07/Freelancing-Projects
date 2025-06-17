@@ -40,7 +40,7 @@ export default function AdminDashboardPage() {
       if ('error' in result) {
         let detailedError = result.error;
         if (detailedError === "Failed to fetch bookings from database.") {
-            detailedError += " Please check browser console for Firebase errors (e.g., permissions, missing indexes).";
+            detailedError += " Please check server logs (terminal or Firebase Functions logs) and browser console for specific Firebase errors (e.g., permissions, missing indexes). Ensure Firestore security rules allow admin access.";
         }
         setError(detailedError);
         setBookings([]);
@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       console.error("Error fetching all bookings in AdminDashboardPage:", err);
-      setError("Failed to load bookings. An unexpected error occurred. Check browser console.");
+      setError("Failed to load bookings. An unexpected error occurred. Check browser console and server logs.");
       setBookings([]);
     } finally {
       setIsLoading(false);
@@ -206,4 +206,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
