@@ -22,16 +22,20 @@ export default function HeroSection() {
               </Button>
             </Link>
             <Link href="/services" passHref>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto"> 
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
                 Book a Service
               </Button>
             </Link>
           </div>
         </div>
         <div className="relative h-72 md:h-96 lg:h-[500px] rounded-xl overflow-hidden shadow-2xl group">
-           <Image 
-            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/herosection_img_lkwyy8.jpg" 
-            alt="Clean water stream with Ozonxt product" 
+           <Image
+            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/herosection_img_lkwyy8.jpg"
+            alt="Clean water stream with Ozonxt product"
             fill={true}
             data-ai-hint="water purifier lifestyle"
             className="object-cover transform group-hover:scale-105 transition-transform duration-500"
