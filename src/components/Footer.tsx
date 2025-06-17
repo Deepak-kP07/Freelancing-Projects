@@ -30,17 +30,17 @@ export default function Footer() {
             <address className="space-y-2 text-sm not-italic text-muted-foreground">
               <p className="flex items-start"><MapPin size={16} className="mr-2 mt-1 shrink-0 text-primary capitalize" />  1-22 Kapu Street Keelagaram (V), Naryanavanam (M) Tirupati, Andhra Pradesh, 517581</p>
               <p className="flex items-center"><Phone size={16} className="mr-2 shrink-0 text-primary" /><a href="tel:+919989263971" className="hover:text-primary transition-colors">+91 9989263971</a></p>
-              <p className="flex items-center"><Mail size={16} className="mr-2 shrink-0 text-primary" /><a href="mailto:tumbikarthik2797@gmail.com" className="hover:text-primary transition-colors">tumbikarthik2797@gmail.com</a></p>
+              <p className="flex items-center"><Mail size={16} className="mr-2 shrink-0 text-primary" /><a href="mailto:tumbikarthik2797@gmail.com" className="hover:text-primary transition-colors">ozonxt@gmail.com</a></p>
             </address>
           </div>
           
           <div>
             <h4 className="text-md font-headline font-semibold text-foreground mb-4">Follow Us</h4>
             <div className="flex space-x-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors"><Facebook size={22} /></a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="text-muted-foreground hover:text-primary transition-colors"><Twitter size={22} /></a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={22} /></a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={22} /></a>
+              <a href="https://www.facebook.com/people/Ozonxt-Ro-Systems/61575201711465/#" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors"><Facebook size={22} /></a>
+              {/* <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="text-muted-foreground hover:text-primary transition-colors"><Twitter size={22} /></a> */}
+              <a href="https://www.instagram.com/ozonxt/?igsh=NzQxMm50eTZ1ZjBi#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram size={22} /></a>
+              {/* <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors"><Linkedin size={22} /></a> */}
             </div>
              <div className="mt-6">
                 <Link href="/developer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">

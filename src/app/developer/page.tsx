@@ -1,22 +1,22 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Linkedin, Twitter, Mail, Globe } from 'lucide-react';
+import { Github, Linkedin, Instagram, Mail, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function DeveloperPage() {
   const developer = {
-    name: "Deepak Perumal",
+    name: "Deepak KP",
     title: "Full Stack Developer & AI Enthusiast",
     bio: "Passionate about building innovative solutions with modern web technologies and exploring the frontiers of Artificial Intelligence. Let's connect and build something amazing!",
-    imageUrl: "https://placehold.co/300x300.png", // Replace with your actual image URL
+    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750168169/WhatsApp_Image_2024-12-06_at_23.32.31_6c62872f_hcl6i6.jpg ", // Replace with your actual image URL
     dataAiHint: "developer portrait",
     socialLinks: [
-      { name: "GitHub", url: "https://github.com/DeepakPerumal", icon: Github },
-      { name: "LinkedIn", url: "https://linkedin.com/in/your-linkedin-profile", icon: Linkedin }, // Replace with your LinkedIn
-      { name: "Twitter", url: "https://twitter.com/your-twitter-handle", icon: Twitter }, // Replace with your Twitter
-      { name: "Portfolio", url: "https://your-portfolio.com", icon: Globe }, // Replace with your portfolio
+      { name: "GitHub", url: "https://github.com/Deepak-kP07", icon: Github },
+      { name: "LinkedIn", url: "https://www.linkedin.com/in/deepak-kp-559a85282/", icon: Linkedin }, // Replace with your LinkedIn
+      { name: "Instagram", url: "https://www.instagram.com/deepak_kp_7/", icon: Instagram}, // Replace with your Twitter
+      // { name: "Portfolio", url: "https://your-portfolio.com", icon: Globe }, // Replace with your portfolio
     ],
     contactEmail: "deepakperumal09@gmail.com",
   };

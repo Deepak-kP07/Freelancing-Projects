@@ -50,10 +50,11 @@ export default function Header() {
 
   return (
     <header className="bg-background/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="container mx-auto px-4 py-1 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-          <Droplets size={32} />
-          <h1 className="text-2xl font-headline font-semibold">Ozonxt</h1>
+          {/* <Droplets size={32} /> */}
+          {/* <h1 className="text-2xl font-headline font-semibold">Ozonxt</h1> */}
+          <img src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" className='w-auto h-20  object-cover'/>
         </Link>
 
         {/* Desktop Navigation */}
