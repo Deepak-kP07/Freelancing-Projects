@@ -4,46 +4,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if the user is an admin
-    // IMPORTANT: Update the email addresses in this list to your actual admin emails.
+    // Function to identify admin users (update with your actual admin emails)
     function isAdmin() {
-      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com']; // Add your admin emails here
+      // Replace with your actual admin email(s)
+      let adminEmails = ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com'];
       return request.auth != null && request.auth.token.email in adminEmails;
     }
 
-    // Users Collection
-    // - Authenticated users can read all user profiles (e.g., for display names, avatars - adjust if too open)
-    // - A user can create their own profile document.
-    // - A user can update their own profile document.
+    // Users collection
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
-      // allow delete: typically not allowed for users to delete their own profiles directly
+      allow create, update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Service Bookings Collection
-    // - Authenticated users can create new bookings for themselves.
-    // - Authenticated users can read/list their own bookings.
-    // - Admin users can read/list all bookings.
-    // - Admin users can update any booking (e.g., status).
+    // Service Bookings collection
     match /serviceBookings/{bookingId} {
       allow create: if request.auth != null && request.resource.data.userEmail == request.auth.token.email;
-      
-      // Read access: User can read their own, Admin can read any/all
-      allow get: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
-      allow list: if request.auth != null && 
-                    (request.query.filters.length > 0 && request.query.filters[0][0] == 'userEmail' && request.query.filters[0][2] == request.auth.token.email || isAdmin());
-      
+      // User can read their own bookings, admin can read any
+      allow read: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
+      // Admin can list all bookings
+      allow list: if request.auth != null && isAdmin();
+      // Admin can update any booking (e.g., status)
       allow update: if request.auth != null && isAdmin();
-      // allow delete: if request.auth != null && isAdmin(); // Admins could delete bookings
     }
 
-    // Counters Collection (for serviceBookingCounter)
-    // - Any authenticated user needs to read and write this document for the transaction to succeed when generating a booking ID.
-    // - This is a common pattern for sequential ID generation on the client/server action side.
-    // - For higher security, this counter update could be moved to a Cloud Function with elevated privileges.
+    // Counters collection for booking ID
     match /counters/serviceBookingCounter {
+      // Allow ANY authenticated user to read AND write this specific document.
+      // This is absolutely necessary for the booking ID generation transaction to succeed
+      // if request.auth is correctly propagated to the server action.
       allow read, write: if request.auth != null;
     }
   }

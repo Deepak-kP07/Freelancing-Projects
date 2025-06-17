@@ -4,14 +4,14 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getUserBookings } from '@/app/services/actions'; 
+import { getUserBookings } from '@/app/services/actions';
 import type { ServerBooking } from '@/app/services/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, Info, AlertCircle, Loader2, Wrench } from 'lucide-react';
+import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function UserDashboardPage() {
@@ -31,14 +31,14 @@ export default function UserDashboardPage() {
         })
         .catch(err => {
           console.error("Error fetching user bookings in UserDashboardPage:", err);
-          setError("Failed to load your service bookings. Please try again later or contact support if the issue persists. Check browser console for more details.");
+          setError("Failed to load your service bookings. Please try again later or contact support if the issue persists. Check browser console and server logs for more details.");
         })
         .finally(() => {
           setIsLoadingBookings(false);
         });
-    } else if (!authLoading && !authUser) { // Added !authUser check
+    } else if (!authLoading && !authUser) {
       setIsLoadingBookings(false);
-      // No specific error set here, as the !authUser condition below handles the message
+      // No error set here, handled by !authUser condition below
     }
   }, [authUser, authLoading]);
 
@@ -58,19 +58,19 @@ export default function UserDashboardPage() {
       </div>
     );
   }
-  
+
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    if (status.toLowerCase().includes('completed')) return 'default'; 
-    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned') || status.toLowerCase().includes('scheduled')) return 'secondary'; 
+    if (status.toLowerCase().includes('completed')) return 'default';
+    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned') || status.toLowerCase().includes('scheduled')) return 'secondary';
     if (status.toLowerCase().includes('cancelled')) return 'destructive';
-    return 'outline'; 
+    return 'outline';
  };
 
 
   return (
     <div className="space-y-8 py-8">
       <h1 className="text-3xl font-headline font-bold text-primary">Your Dashboard</h1>
-      
+
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -154,4 +154,3 @@ export default function UserDashboardPage() {
     </div>
   );
 }
-
