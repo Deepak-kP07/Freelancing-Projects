@@ -47,7 +47,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
            <div className="flex justify-center mb-4">
-            <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo"  height={80} data-ai-hint="water logo" />
+            <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={180} height={80} data-ai-hint="water logo" />
           </div>
           <CardTitle className="text-2xl font-headline">Welcome Back to Ozonxt</CardTitle>
           <CardDescription>Sign in to continue to your account.</CardDescription>
