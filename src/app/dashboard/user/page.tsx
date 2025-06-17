@@ -31,6 +31,10 @@ export default function UserDashboardPage() {
         })
         .catch(err => {
           console.error("Error fetching user bookings in UserDashboardPage:", err);
+          // err.message from actions.ts is already "Failed to fetch your bookings: ${rawError.message} (Code: ${rawError.code}). ${specificGuidance}"
+          // The user wants the final error string to be:
+          // "Failed to load your bookings: Failed to fetch your bookings: ... . Check console for details."
+          // So, we prepend "Failed to load your bookings: " and append ". Check console for details." to the message from actions.ts
           setError(`Failed to load your bookings: ${err.message}. Check console for details.`);
         })
         .finally(() => {
@@ -59,7 +63,7 @@ export default function UserDashboardPage() {
     );
   }
   
-  if (!authUser && authLoading) { // Still loading auth info
+  if (!authUser && authLoading) { 
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
@@ -102,21 +106,41 @@ export default function UserDashboardPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <ShoppingBag className="text-accent" /> Your Service Bookings
-          </CardTitle>
-          <CardDescription>
-            View the status and details of your scheduled services.
-          </CardDescription>
+          {error && !isLoadingBookings ? (
+            <>
+              <CardTitle className="flex items-center gap-2 text-xl text-destructive">
+                <AlertCircle className="h-5 w-5" /> Error Loading Bookings
+              </CardTitle>
+              <CardDescription className="text-destructive whitespace-pre-wrap">
+                {error}
+              </CardDescription>
+            </>
+          ) : (
+            <>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <ShoppingBag className="text-accent" /> Your Service Bookings
+              </CardTitle>
+              <CardDescription>
+                View the status and details of your scheduled services.
+              </CardDescription>
+            </>
+          )}
         </CardHeader>
         <CardContent>
-          {isLoadingBookings && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
-          {error && !isLoadingBookings && (
-            <div className="text-center py-10 text-destructive">
-              <AlertCircle className="mx-auto h-12 w-12 mb-3" />
-              <p className="text-lg">{error}</p>
-            </div>
+          {isLoadingBookings && (
+            <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           )}
+          
+          {/* Error display is now handled in CardHeader, so no need for a separate block here unless a different style is desired. */}
+          {/* For example, if you still wanted a larger, centered error icon in content despite header message:
+            {error && !isLoadingBookings && (
+              <div className="text-center py-10">
+                <AlertCircle className="mx-auto h-12 w-12 text-destructive/70 mb-3" />
+                <p className="text-sm text-muted-foreground">Details provided in the header above.</p>
+              </div>
+            )}
+          */}
+          
           {!isLoadingBookings && !error && bookings.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">
               <Info className="mx-auto h-12 w-12 mb-4 text-primary" />
@@ -168,5 +192,4 @@ export default function UserDashboardPage() {
     </div>
   );
 }
-
     
