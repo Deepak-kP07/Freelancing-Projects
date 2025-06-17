@@ -9,10 +9,11 @@ import ThemeToggleButton from './ThemeToggleButton';
 import NavLink from './NavLink';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Droplets, Menu, LayoutDashboard } from 'lucide-react';
+import { Menu, LayoutDashboard } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { ADMIN_EMAIL } from '@/lib/constants';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,16 +50,14 @@ export default function Header() {
   );
 
   return (
-    <header className="bg-background/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-1 flex items-center justify-between">
+    <header className="bg-background border-b border-border sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-1 flex items-center justify-between h-20"> {/* Increased height a bit */}
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-          {/* <Droplets size={32} /> */}
-          {/* <h1 className="text-2xl font-headline font-semibold">Ozonxt</h1> */}
-          <img src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" className='w-auto h-20  object-cover'/>
+          <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={150} height={60} className='object-contain' data-ai-hint="water logo" />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-x-3 lg:gap-x-4">
+        <nav className="hidden md:flex items-center gap-x-4 lg:gap-x-5"> {/* Increased gap slightly */}
           {commonNavLinks}
         </nav>
 
@@ -77,21 +76,20 @@ export default function Header() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6 flex flex-col">
-                <SheetHeader className="pb-4 mb-4 border-b">
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-6 flex flex-col bg-background">
+                <SheetHeader className="pb-4 mb-4 border-b border-border">
                   <SheetTitle>
                     <Link href="/" className="flex items-center gap-2 text-primary" onClick={closeMobileMenu}>
-                      <Droplets size={28} />
-                      <span className="text-xl font-headline font-semibold">Ozonxt</span>
+                       <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={120} height={48} className='object-contain' data-ai-hint="water logo" />
                     </Link>
                   </SheetTitle>
                 </SheetHeader>
                 
-                <nav className="flex flex-col gap-y-2 flex-grow">
+                <nav className="flex flex-col gap-y-3 flex-grow"> {/* Increased gap slightly */}
                   {commonNavLinks}
                 </nav>
                 
-                <div className="mt-auto pt-4 border-t">
+                <div className="mt-auto pt-4 border-t border-border">
                   <AuthButton />
                 </div>
               </SheetContent>

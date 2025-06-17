@@ -4,84 +4,97 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Mail, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Send, Clock } from "lucide-react";
 
 export default function ContactPage() {
-  // Basic form submission handler (can be expanded with a server action)
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Add form submission logic here (e.g., send to an API endpoint or server action)
-    alert("Form submitted! (This is a placeholder)");
+    // Placeholder for form submission logic (e.g., using a server action)
+    // For now, an alert or toast can indicate submission
+    // Replace with actual logic when backend is ready
+    alert("Form submitted! We will get back to you soon. (This is a placeholder message)");
+    // Consider using react-hook-form for more robust form handling
+    (event.target as HTMLFormElement).reset(); // Reset form after submission
   };
 
   return (
-    <div className="py-12 md:py-16">
+    <div className="py-12 md:py-20">
       <div className="container mx-auto px-4">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-10 text-center">
-          Get In Touch With Ozonxt
-        </h1>
+        <div className="text-center mb-12 md:mb-16">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-4">
+            Get In Touch
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            We're here to help! Whether you have questions about our products, services, or just want to say hello, feel free to reach out.
+          </p>
+        </div>
         
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <Card className="shadow-xl">
+        <div className="grid lg:grid-cols-5 gap-10 md:gap-12 items-start">
+          <Card className="lg:col-span-2 shadow-lg border-border">
             <CardHeader>
               <CardTitle className="text-2xl font-headline">Contact Information</CardTitle>
-              <CardDescription>We're here to help and answer any question you might have.</CardDescription>
+              <CardDescription>Find us at our office or connect with us through phone or email.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 text-sm">
               <div className="flex items-start">
                 <MapPin size={20} className="mr-3 mt-1 text-primary shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground">Our Office Address</h3>
+                  <h3 className="font-semibold text-foreground mb-0.5">Our Office Address</h3>
                   <p className="text-muted-foreground">123 Aqua Street, Pureville, CleanState 560001, India</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Phone size={20} className="mr-3 text-primary shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground">Phone Number</h3>
+                  <h3 className="font-semibold text-foreground mb-0.5">Phone Number</h3>
                   <a href="tel:+911234567890" className="text-muted-foreground hover:text-primary">+91 123 456 7890</a>
                 </div>
               </div>
               <div className="flex items-center">
                 <Mail size={20} className="mr-3 text-primary shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground">Email Address</h3>
+                  <h3 className="font-semibold text-foreground mb-0.5">Email Address</h3>
                   <a href="mailto:info@ozonxt.com" className="text-muted-foreground hover:text-primary">info@ozonxt.com</a>
                 </div>
               </div>
-               <div className="pt-4">
-                  <h3 className="font-semibold text-foreground mb-2">Business Hours</h3>
-                  <p className="text-muted-foreground">Monday - Friday: 9:00 AM - 6:00 PM</p>
-                  <p className="text-muted-foreground">Saturday: 10:00 AM - 4:00 PM</p>
-                  <p className="text-muted-foreground">Sunday: Closed</p>
+               <div className="flex items-start pt-2">
+                  <Clock size={20} className="mr-3 mt-1 text-primary shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
+                    <p className="text-muted-foreground">Monday - Friday: 9:00 AM - 6:00 PM</p>
+                    <p className="text-muted-foreground">Saturday: 10:00 AM - 4:00 PM</p>
+                    <p className="text-muted-foreground">Sunday: Closed</p>
+                  </div>
                 </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-xl">
+          <Card className="lg:col-span-3 shadow-lg border-border">
             <CardHeader>
               <CardTitle className="text-2xl font-headline">Send Us a Message</CardTitle>
-              <CardDescription>Fill out the form and we'll get back to you shortly.</CardDescription>
+              <CardDescription>Have a question or need assistance? Fill out the form below.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" name="name" placeholder="Your Full Name" required />
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="name" className="mb-1.5 block">Full Name</Label>
+                    <Input id="name" name="name" placeholder="Your Full Name" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="mb-1.5 block">Email Address</Label>
+                    <Input id="email" name="email" type="email" placeholder="your.email@example.com" required />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" name="email" type="email" placeholder="your.email@example.com" required />
-                </div>
-                <div>
-                  <Label htmlFor="subject">Subject</Label>
+                  <Label htmlFor="subject" className="mb-1.5 block">Subject</Label>
                   <Input id="subject" name="subject" placeholder="Enquiry about..." />
                 </div>
                 <div>
-                  <Label htmlFor="message">Message</Label>
+                  <Label htmlFor="message" className="mb-1.5 block">Message</Label>
                   <Textarea id="message" name="message" placeholder="Your message here..." rows={5} required />
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full sm:w-auto" size="lg">
                   <Send size={18} className="mr-2" /> Send Message
                 </Button>
               </form>
@@ -89,12 +102,11 @@ export default function ContactPage() {
           </Card>
         </div>
         
-        <div className="mt-16 rounded-lg overflow-hidden shadow-xl h-80 md:h-96">
-          {/* Placeholder for an interactive map or a static map image */}
+        <div className="mt-16 md:mt-24 rounded-xl overflow-hidden shadow-xl h-80 md:h-[500px] border border-border">
           <img 
-            src="https://placehold.co/1200x400.png" 
+            src="https://placehold.co/1200x500.png" 
             alt="Map showing Ozonxt location" 
-            data-ai-hint="office map" 
+            data-ai-hint="city map office" 
             className="w-full h-full object-cover" 
           />
         </div>

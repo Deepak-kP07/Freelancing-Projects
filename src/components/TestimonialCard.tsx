@@ -10,20 +10,20 @@ interface TestimonialCardProps {
 
 export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
-    <Card className="h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-center gap-4 pb-2">
-        <Avatar className="h-12 w-12">
+    <Card className="h-full flex flex-col transition-all duration-300 hover:border-primary/50 hover:shadow-lg p-2"> {/* Added padding and subtle hover */}
+      <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-4 px-4"> {/* Adjusted padding */}
+        <Avatar className="h-12 w-12 border-2 border-primary/20">
           <AvatarImage src={testimonial.avatarUrl} alt={testimonial.author} data-ai-hint={testimonial.dataAiHint} />
           <AvatarFallback>{testimonial.author.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle className="text-lg font-headline">{testimonial.author}</CardTitle>
-          <CardDescription className="text-sm">{testimonial.role}</CardDescription>
+          <CardTitle className="text-md font-headline font-semibold">{testimonial.author}</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">{testimonial.role}</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow relative pt-2">
-        <Quote className="absolute top-0 left-0 h-8 w-8 text-primary/20 transform -translate-x-2 -translate-y-2" />
-        <p className="text-foreground/80 italic leading-relaxed text-sm">"{testimonial.text}"</p>
+      <CardContent className="flex-grow relative pt-2 px-4 pb-4"> {/* Adjusted padding */}
+        <Quote className="absolute top-0 left-0 h-10 w-10 text-primary/10 transform -translate-x-3 -translate-y-3" />
+        <p className="text-foreground/85 italic leading-relaxed text-sm relative z-10">"{testimonial.text}"</p>
       </CardContent>
     </Card>
   );

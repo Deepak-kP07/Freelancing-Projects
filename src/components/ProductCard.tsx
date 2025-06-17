@@ -8,7 +8,7 @@ import type { Product } from '@/lib/constants';
 import { useDispatch } from 'react-redux';
 import { addItem } from '@/store/cartSlice';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Sparkles } from 'lucide-react'; // Added Sparkles for discount
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +23,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     toast({
       title: `${product.name} added to cart!`,
       description: "You can view your cart or continue shopping.",
-      variant: 'default',
+      variant: 'default', // Keep as default, toast variants defined in globals.css
     });
   };
 
@@ -33,35 +33,33 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
-      <CardHeader className="p-0 relative">
-        <div className="relative w-full h-48 md:h-56">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill={true}
-            data-ai-hint={product.dataAiHint}
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
+    <Card className="flex flex-col h-full overflow-hidden group transition-all duration-300 hover:border-primary/50 hover:shadow-lg"> {/* Subtle hover effect */}
+      <CardHeader className="p-0 relative aspect-square"> {/* Make image container square */}
+        <Image
+          src={product.imageUrl}
+          alt={product.name}
+          fill={true}
+          data-ai-hint={product.dataAiHint}
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
         {hasDiscount && (
-          <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-md">
-            {discountPercentage}% OFF
+          <div className="absolute top-3 right-3 bg-accent text-accent-foreground text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <Sparkles className="h-3 w-3" /> {discountPercentage}% OFF
           </div>
         )}
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-xl font-headline mb-1 truncate" title={product.name}>{product.name}</CardTitle>
-        <CardDescription className="text-sm text-foreground/70 mb-2 line-clamp-2 h-10">{product.description}</CardDescription>
-        <div className="flex items-baseline gap-2 mt-2">
-          <p className="text-lg font-semibold text-primary">&#x20B9;{product.price.toFixed(2)}</p>
+      <CardContent className="p-4 flex-grow flex flex-col">
+        <CardTitle className="text-lg font-headline mb-1 group-hover:text-primary transition-colors" title={product.name}>{product.name}</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground mb-3 line-clamp-2 h-10">{product.description}</CardDescription>
+        <div className="flex items-baseline gap-2 mt-auto pt-2"> {/* Pushes price to bottom */}
+          <p className="text-xl font-semibold text-primary">&#x20B9;{product.price.toFixed(0)}</p>
           {hasDiscount && (
-            <p className="text-sm text-muted-foreground line-through">&#x20B9;{product.originalPrice!.toFixed(2)}</p>
+            <p className="text-sm text-muted-foreground line-through">&#x20B9;{product.originalPrice!.toFixed(0)}</p>
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
-        <Button onClick={handleAddToCart} className="w-full">
+      <CardFooter className="p-4 pt-0 border-t mt-auto"> {/* Add border-t */}
+        <Button onClick={handleAddToCart} className="w-full" variant="outline">
           <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
         </Button>
       </CardFooter>
