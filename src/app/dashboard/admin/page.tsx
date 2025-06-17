@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { getAllBookings, updateBookingStatus } from '@/app/services/actions';
-import type { ServerBooking } from '@/app/services/actions'; // This type now expects Date objects
+import type { ServerBooking } from '@/app/services/actions'; 
 import { ADMIN_EMAIL, SERVICE_STATUSES } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, AlertTriangle, Loader2, Users, RefreshCcw } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Loader2, Users, RefreshCcw, Info } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function AdminDashboardPage() {
@@ -28,51 +28,63 @@ export default function AdminDashboardPage() {
 
   const fetchBookings = useCallback(async () => {
     console.log('AdminDashboard: Attempting to fetch bookings. User email:', authUser?.email, 'Is client-side admin:', isAdmin);
-    if (!isAdmin) {
-      setError("Access Denied: Client-side admin check failed.");
-      setIsLoading(false);
-      return;
+    if (!authUser || !isAdmin) { // Ensure user is authenticated and is an admin
+        let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
+        if (authUser && !isAdmin) accessDeniedReason = "Access Denied: You do not have permission to view this page.";
+        else if (!authUser) accessDeniedReason = "Access Denied: You must be logged in to view this page.";
+        setError(accessDeniedReason);
+        setIsLoading(false);
+        setBookings([]); // Clear bookings if access is denied
+        return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAllBookings(authUser?.email);
+      // Pass the authenticated admin's email to the server action for logging/verification if needed by the action.
+      const result = await getAllBookings(authUser.email); 
       if ('error' in result) {
         let detailedError = result.error;
-        if (detailedError === "Failed to fetch bookings from database.") {
-            detailedError += " Please check server logs (terminal or Firebase Functions logs) and browser console for specific Firebase errors (e.g., permissions, missing indexes). Ensure Firestore security rules allow admin access.";
+        if (detailedError.includes("Failed to fetch bookings from database")) {
+            detailedError += " Ensure Firestore security rules grant 'list' permission on 'serviceBookings' to admins and check server logs (terminal or Firebase Functions logs) for specific Firebase errors (e.g., permissions, missing indexes).";
         }
         setError(detailedError);
         setBookings([]);
       } else {
-        // Data from Firestore is already processed to have Date objects
         setBookings(result as ServerBooking[]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching all bookings in AdminDashboardPage:", err);
-      setError("Failed to load bookings. An unexpected error occurred. Check browser console and server logs.");
+      setError(`Failed to load bookings. An unexpected error occurred: ${err.message || 'Unknown error'}. Check browser console and server logs.`);
       setBookings([]);
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, authUser?.email]);
+  }, [isAdmin, authUser]); // authUser is now a direct dependency
 
   useEffect(() => {
-    if (!authLoading && isAdmin) {
-      fetchBookings();
-    } else if (!authLoading && !isAdmin && authUser) { // Check authUser to ensure it's not just loading
-      setIsLoading(false);
-      setError("Access Denied: You do not have permission to view this page. Ensure your email is in ADMIN_EMAIL constant and Firestore rules.");
-       console.warn("AdminDashboard: Access denied. User email:", authUser?.email, "Expected admin emails:", ADMIN_EMAIL);
-    } else if (!authLoading && !authUser) {
-        setIsLoading(false);
-        setError("Access Denied: You must be logged in to view this page.");
+    if (!authLoading) { // Only proceed once auth state is resolved
+        if (authUser && isAdmin) {
+            fetchBookings();
+        } else {
+            setIsLoading(false); // Stop loading if not admin or not logged in
+            let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
+            if (authUser && !isAdmin) accessDeniedReason = "Access Denied: You do not have permission to view this page. Ensure your email is in ADMIN_EMAIL constant and your Firestore rules correctly identify you as an admin.";
+            else if (!authUser) accessDeniedReason = "Access Denied: You must be logged in to view this page.";
+            setError(accessDeniedReason);
+            setBookings([]); // Clear bookings
+            console.warn("AdminDashboard: Access denied. User:", authUser?.email, "Is admin (client-side):", isAdmin);
+        }
     }
   }, [authLoading, isAdmin, authUser, fetchBookings]);
 
+
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
+    if (!authUser?.email) {
+        toast({ title: 'Authentication Error', description: 'You must be logged in to perform this action.', variant: 'destructive' });
+        return;
+    }
     try {
-      const result = await updateBookingStatus(bookingId, newStatus, authUser?.email);
+      const result = await updateBookingStatus(bookingId, newStatus, authUser.email);
       toast({
         title: result.success ? 'Status Updated' : 'Update Failed',
         description: result.message,
@@ -95,37 +107,25 @@ export default function AdminDashboardPage() {
   
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     if (status.toLowerCase().includes('completed')) return 'default';
-    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned')) return 'secondary';
+    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned') || status.toLowerCase().includes('scheduled')) return 'secondary';
     if (status.toLowerCase().includes('cancelled')) return 'destructive';
     return 'outline';
  };
 
-
-  if (authLoading || (isLoading && bookings.length === 0 && !error && authUser && isAdmin)) { 
+  if (authLoading || (isLoading && !error && (!authUser || !isAdmin))) { 
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
-
-  if (!isAdmin && !authLoading) { // Check !authLoading here as well
-    return (
-      <div className="text-center py-12">
-        <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Access Denied</h1>
-        <p className="text-muted-foreground">{error || "You do not have permission to view this page."}</p>
-      </div>
-    );
-  }
   
-  if (error && !isLoading) {
+  if (error && !isLoading) { // This will now also show for access denied errors from useEffect
      return (
       <div className="text-center py-12">
         <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Error Loading Bookings</h1>
+        <h1 className="text-2xl font-semibold mb-2">{error.startsWith("Access Denied") ? "Access Denied" : "Error Loading Bookings"}</h1>
         <p className="text-destructive px-4">{error}</p>
-        <Button onClick={fetchBookings} className="mt-4">Try Again</Button>
+        {!error.startsWith("Access Denied") && <Button onClick={fetchBookings} className="mt-4">Try Again</Button>}
       </div>
     );
   }
-
 
   return (
     <div className="space-y-8 py-8">
@@ -150,7 +150,10 @@ export default function AdminDashboardPage() {
         <CardContent>
           {isLoading && bookings.length === 0 && !error && <div className="flex justify-center py-6"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
           {!isLoading && !error && bookings.length === 0 && (
-            <p className="text-muted-foreground text-center py-10">No service bookings found.</p>
+            <div className="text-center py-10 text-muted-foreground">
+              <Info className="mx-auto h-12 w-12 mb-3 text-primary" />
+              <p className="text-lg">No service bookings found in the system.</p>
+            </div>
           )}
           {!isLoading && !error && bookings.length > 0 && (
             <Table>
@@ -165,7 +168,7 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((booking) => ( // No sort here if Firestore query sorts
+                {bookings.map((booking) => ( 
                   <TableRow key={booking.id}>
                     <TableCell className="font-mono text-xs">{booking.displayId}</TableCell>
                     <TableCell className="text-xs">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
@@ -206,3 +209,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+

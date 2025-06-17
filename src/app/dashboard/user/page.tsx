@@ -5,11 +5,13 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { getUserBookings } from '@/app/services/actions'; 
-import type { ServerBooking } from '@/app/services/actions'; // This type now expects Date objects
+import type { ServerBooking } from '@/app/services/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, Info, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { User, ShoppingBag, CalendarDays, Clock, Tag, Info, AlertCircle, Loader2, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function UserDashboardPage() {
@@ -25,18 +27,18 @@ export default function UserDashboardPage() {
       setError(null);
       getUserBookings(authUser.email)
         .then(data => {
-          // Data from Firestore is already processed to have Date objects for timestamps
           setBookings(data);
         })
         .catch(err => {
-          console.error("Error fetching user bookings:", err);
-          setError("Failed to load your service bookings. Please try again later.");
+          console.error("Error fetching user bookings in UserDashboardPage:", err);
+          setError("Failed to load your service bookings. Please try again later or contact support if the issue persists. Check browser console for more details.");
         })
         .finally(() => {
           setIsLoadingBookings(false);
         });
-    } else if (!authLoading) {
+    } else if (!authLoading && !authUser) { // Added !authUser check
       setIsLoadingBookings(false);
+      // No specific error set here, as the !authUser condition below handles the message
     }
   }, [authUser, authLoading]);
 
@@ -50,13 +52,16 @@ export default function UserDashboardPage() {
         <AlertCircle className="mx-auto h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Access Denied</h1>
         <p className="text-muted-foreground">Please log in to view your dashboard.</p>
+         <Link href="/login" passHref>
+          <Button className="mt-4">Login</Button>
+        </Link>
       </div>
     );
   }
   
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     if (status.toLowerCase().includes('completed')) return 'default'; 
-    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned')) return 'secondary'; 
+    if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('assigned') || status.toLowerCase().includes('scheduled')) return 'secondary'; 
     if (status.toLowerCase().includes('cancelled')) return 'destructive';
     return 'outline'; 
  };
@@ -100,19 +105,23 @@ export default function UserDashboardPage() {
           {error && <p className="text-destructive text-center py-4">{error}</p>}
           {!isLoadingBookings && !error && bookings.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">
-              <Info className="mx-auto h-12 w-12 mb-3" />
-              <p>You have no service bookings yet.</p>
+              <Wrench className="mx-auto h-12 w-12 mb-4 text-primary" />
+              <p className="text-lg mb-2">You have no service bookings yet.</p>
+              <p className="mb-6">Book one to see your updates here!</p>
+              <Link href="/services" passHref>
+                <Button>Book a Service</Button>
+              </Link>
             </div>
           )}
           {!isLoadingBookings && !error && bookings.length > 0 && (
             <div className="space-y-6">
-              {bookings.map(booking => ( // No need to sort here if Firestore query sorts
+              {bookings.map(booking => (
                 <Card key={booking.id} className="bg-muted/30">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-lg">{booking.serviceType}</CardTitle>
-                        <p className="text-xs text-accent font-mono mt-1">ID: {booking.displayId}</p>
+                        <p className="text-xs text-accent font-mono mt-1">Booking ID: {booking.displayId}</p>
                       </div>
                       <Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge>
                     </div>
@@ -133,7 +142,7 @@ export default function UserDashboardPage() {
                     </div>
                      <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-primary" />
-                      <span>Booking ID: <span className="font-mono text-xs bg-muted p-1 rounded">{booking.id.substring(0,8)}...</span> (Internal)</span>
+                      <span>Internal ID: <span className="font-mono text-xs bg-muted p-1 rounded">{booking.id.substring(0,8)}...</span></span>
                     </div>
                   </CardContent>
                 </Card>
@@ -145,3 +154,4 @@ export default function UserDashboardPage() {
     </div>
   );
 }
+
