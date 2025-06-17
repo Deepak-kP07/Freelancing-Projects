@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,35 +24,35 @@ body {
     --border: 210 20% 88%; /* Softer border color */
     --input: 210 30% 94%; /* Lighter input background */
 
-    --primary: 220 75% 55%; /* Modern, slightly desaturated blue */
+    --primary: 175 65% 40%; /* New Teal Primary */
     --primary-foreground: 0 0% 100%; /* White text on primary */
 
     --secondary: 210 40% 90%; /* Light cool gray for secondary elements */
-    --secondary-foreground: 220 75% 45%; /* Darker blue for secondary text */
+    --secondary-foreground: 175 65% 30%; /* Darker teal for secondary text, for consistency */
 
-    --accent: 250 65% 60%; /* A refined violet/purple accent */
+    --accent: 250 65% 60%; /* A refined violet/purple accent - kept as is */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%; /* Softer red for destructive actions */
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 220 75% 55%; /* Primary color for rings */
+    --ring: 175 65% 40%; /* New Teal for rings */
     
-    --chart-1: 220 75% 55%;
-    --chart-2: 250 65% 60%;
-    --chart-3: 190 60% 45%; /* A muted teal */
+    --chart-1: 175 65% 40%; /* New Teal */
+    --chart-2: 250 65% 60%; /* Accent Purple */
+    --chart-3: 190 60% 45%; /* A muted teal/green */
     --chart-4: 30 80% 60%; /* A muted orange */
     --chart-5: 120 40% 55%; /* A muted green */
     --radius: 0.75rem; /* Slightly more rounded corners */
 
     --sidebar-background: 210 50% 96%; 
     --sidebar-foreground: 215 30% 20%;
-    --sidebar-primary: 220 75% 55%;
+    --sidebar-primary: 175 65% 40%; /* New Teal */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 250 65% 60%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 20% 85%;
-    --sidebar-ring: 220 75% 55%;
+    --sidebar-ring: 175 65% 40%; /* New Teal */
   }
 
   .dark {
@@ -70,34 +71,34 @@ body {
     --border: 220 15% 25%; /* Subtle border for dark mode */
     --input: 220 15% 22%; /* Dark input background */
 
-    --primary: 220 70% 65%; /* Brighter blue for dark mode primary */
-    --primary-foreground: 220 10% 10%; /* Dark text on primary */
+    --primary: 175 60% 55%; /* Brighter Teal for dark mode primary */
+    --primary-foreground: 210 40% 98%; /* Very light off-white text on dark primary */
 
     --secondary: 220 15% 25%; /* Dark secondary elements */
-    --secondary-foreground: 210 30% 85%;
+    --secondary-foreground: 175 60% 70%; /* Lighter teal for dark secondary text */
 
-    --accent: 250 60% 70%; /* Brighter accent for dark mode */
+    --accent: 250 60% 70%; /* Brighter accent for dark mode - kept as is */
     --accent-foreground: 220 10% 10%;
 
     --destructive: 0 60% 55%; /* Destructive for dark mode */
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 220 70% 65%;
+    --ring: 175 60% 55%; /* Brighter Teal for rings */
     
-    --chart-1: 220 70% 65%;
-    --chart-2: 250 60% 70%;
+    --chart-1: 175 60% 55%; /* Brighter Teal */
+    --chart-2: 250 60% 70%; /* Accent Purple */
     --chart-3: 190 50% 55%;
     --chart-4: 30 70% 65%;
     --chart-5: 120 35% 60%;
 
     --sidebar-background: 220 20% 12%;
     --sidebar-foreground: 210 30% 80%;
-    --sidebar-primary: 220 70% 65%;
-    --sidebar-primary-foreground: 220 10% 10%;
+    --sidebar-primary: 175 60% 55%; /* Brighter Teal */
+    --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 250 60% 70%;
     --sidebar-accent-foreground: 220 10% 10%;
     --sidebar-border: 220 15% 23%;
-    --sidebar-ring: 220 70% 65%;
+    --sidebar-ring: 175 60% 55%; /* Brighter Teal */
   }
 }
 
