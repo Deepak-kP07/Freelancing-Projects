@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } // Added useRef
+  from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
@@ -61,6 +62,7 @@ export default function ServiceBookingForm() {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null); // Added form ref
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -83,7 +85,7 @@ export default function ServiceBookingForm() {
         duration: state.success ? 5000 : 7000,
       });
       if (state.success) {
-        form.reset({ // Reset with auth user details if available, otherwise empty
+        form.reset({
           name: authUser?.displayName || '',
           email: authUser?.email || '',
           phone: '', serviceType: '', preferredDate: undefined, preferredTime: ''
@@ -92,9 +94,9 @@ export default function ServiceBookingForm() {
     }
     if (state?.errors) {
         (Object.keys(state.errors) as Array<keyof BookingFormData | '_form'>).forEach((key) => {
-            const errorMessages = state.errors?.[key as keyof BookingFormData]; // Type assertion
+            const errorMessages = state.errors?.[key as keyof BookingFormData];
              if (key === '_form' && state.errors?._form) {
-                // Handle form-wide errors if needed, though toast might be sufficient
+                // Form-wide errors are handled by the main toast
             } else if (errorMessages && errorMessages.length > 0 && key !== '_form') {
                  form.setError(key as keyof BookingFormData, { type: 'server', message: errorMessages.join(', ') });
             }
@@ -106,25 +108,41 @@ export default function ServiceBookingForm() {
 
   useEffect(() => {
     if (authUser) {
-      if (authUser.displayName && !form.getValues('name')) { // Only set if form field is empty
+      if (authUser.displayName && !form.getValues('name')) {
         form.setValue('name', authUser.displayName, { shouldValidate: true });
       }
-      if (authUser.email && !form.getValues('email')) { // Only set if form field is empty
+      if (authUser.email && !form.getValues('email')) {
         form.setValue('email', authUser.email, { shouldValidate: true });
       }
     }
   }, [authUser, form]);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onValidSubmit = (data: BookingFormData) => { // data is from RHF, not directly used here
     if (!authUser) {
       setIsLoginModalOpen(true);
       return;
     }
-    form.handleSubmit(() => {
-      const formData = new FormData(event.currentTarget);
-      formAction(formData);
-    })(event);
+
+    if (formRef.current) {
+      const formDataInstance = new FormData(formRef.current);
+      // Ensure all relevant RHF fields are actually in FormData
+      // For 'preferredDate', the hidden input handles it.
+      // For 'serviceType' (Select), ensure it has a 'name' attribute.
+      // For 'name', 'email', 'phone', 'preferredTime', `form.register` handles 'name'.
+      
+      // Log FormData for debugging if needed
+      // for (let [key, value] of formDataInstance.entries()) {
+      //   console.log(`${key}: ${value}`);
+      // }
+      formAction(formDataInstance);
+    } else {
+      console.error("ServiceBookingForm: formRef.current is null. Cannot create FormData.");
+      toast({
+        title: "Form Submission Error",
+        description: "An unexpected error occurred while submitting the form. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -146,7 +164,12 @@ export default function ServiceBookingForm() {
             </div>
           </div>
         )}
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form
+          ref={formRef} // Attach ref
+          onSubmit={form.handleSubmit(onValidSubmit)} // Use RHF handleSubmit
+          className="space-y-6"
+          id="service-booking-form" // ID can be kept if needed elsewhere
+        >
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="name" className="mb-1.5 block">Full Name</Label>
@@ -171,7 +194,7 @@ export default function ServiceBookingForm() {
             <Select
               onValueChange={(value) => form.setValue('serviceType', value, { shouldValidate: true })}
               defaultValue={form.getValues('serviceType')}
-              name="serviceType" // Ensure name is present for FormData
+              name="serviceType" // Crucial: name attribute for FormData
             >
               <SelectTrigger className={cn(form.formState.errors.serviceType || state?.errors?.serviceType ? 'border-destructive focus-visible:ring-destructive/50' : '')}>
                 <SelectValue placeholder="Select a service" />
@@ -187,13 +210,14 @@ export default function ServiceBookingForm() {
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="preferredDate" className="mb-1.5 block">Preferred Date</Label>
+              <Label htmlFor="preferredDateTrigger" className="mb-1.5 block">Preferred Date</Label> {/* Changed htmlFor to avoid conflict with hidden input's id if it had one */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    id="preferredDateTrigger"
                     variant="outline"
                     className={cn(
-                      'w-full justify-start text-left font-normal h-11', // Increased height
+                      'w-full justify-start text-left font-normal h-11',
                       !watchedPreferredDate && 'text-muted-foreground',
                       (form.formState.errors.preferredDate || state?.errors?.preferredDate) && 'border-destructive focus-visible:ring-destructive/50'
                     )}
@@ -208,18 +232,16 @@ export default function ServiceBookingForm() {
                     selected={watchedPreferredDate}
                     onSelect={(date) => {
                         form.setValue('preferredDate', date as Date, {shouldValidate: true});
-                        // Explicitly set hidden input value for FormData
-                        const hiddenInput = document.querySelector('input[name="preferredDate"]') as HTMLInputElement | null;
-                        if (hiddenInput && date) hiddenInput.value = date.toISOString();
                       }
                     }
                     initialFocus
-                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Prevent past dates
+                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))}
                   />
                 </PopoverContent>
               </Popover>
+              {/* This hidden input is crucial for FormData construction */}
               <input
-                type="hidden" // This will be used by FormData
+                type="hidden"
                 name="preferredDate"
                 value={watchedPreferredDate instanceof Date ? watchedPreferredDate.toISOString() : ''}
               />
@@ -228,7 +250,7 @@ export default function ServiceBookingForm() {
 
             <div>
               <Label htmlFor="preferredTime" className="mb-1.5 block">Preferred Time</Label>
-              <Input id="preferredTime" type="time" {...form.register('preferredTime')} className={cn('h-11', form.formState.errors.preferredTime || state?.errors?.preferredTime ? 'border-destructive focus-visible:ring-destructive/50' : '')}/> {/* Increased height */}
+              <Input id="preferredTime" type="time" {...form.register('preferredTime')} className={cn('h-11', form.formState.errors.preferredTime || state?.errors?.preferredTime ? 'border-destructive focus-visible:ring-destructive/50' : '')}/>
               {(form.formState.errors.preferredTime || state?.errors?.preferredTime) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredTime?.message || state?.errors?.preferredTime?.[0]}</p>}
             </div>
           </div>
@@ -258,3 +280,5 @@ export default function ServiceBookingForm() {
     </Card>
   );
 }
+
+    
