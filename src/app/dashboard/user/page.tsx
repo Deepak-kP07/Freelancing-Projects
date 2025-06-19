@@ -6,13 +6,14 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { getUserBookings } from '@/app/services/actions';
 import type { ServerBooking } from '@/app/services/actions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { User, ShoppingBag, CalendarDays, Clock, Tag, AlertCircle, Loader2, Wrench, Info, PlusCircle } from 'lucide-react';
+import { User, ShoppingBag, CalendarDays, Clock, AlertCircle, Loader2, Info, PlusCircle, Phone, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
+import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 
 export default function UserDashboardPage() {
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -72,6 +73,16 @@ export default function UserDashboardPage() {
     if (status.toLowerCase().includes('cancelled')) return 'destructive';
     return 'outline';
  };
+
+  const generateWhatsAppMessage = (booking: ServerBooking) => {
+    let message = "Hello Ozonxt,\n\n";
+    message += "I have a question about my service booking:\n";
+    message += `Booking ID: ${booking.displayId}\n`;
+    message += `Service Type: ${booking.serviceType}\n`;
+    message += `Scheduled For: ${format(new Date(booking.preferredDate), 'PPP')} at ${booking.preferredTime}\n\n`;
+    message += "My question is: [Please type your question here]";
+    return encodeURIComponent(message);
+  };
 
 
   return (
@@ -139,7 +150,6 @@ export default function UserDashboardPage() {
               <Info className="mx-auto h-12 w-12 mb-4 text-primary" />
               <p className="text-lg mb-2">You have no service bookings yet.</p>
               <p className="mb-6">Book one to see your updates here!</p>
-              {/* Button moved to CardHeader */}
             </div>
           )}
           {!isLoadingBookings && !error && bookings.length > 0 && (
@@ -169,11 +179,19 @@ export default function UserDashboardPage() {
                       <User className="h-4 w-4 text-primary" />
                       <span>Name: {booking.name}</span>
                     </div>
-                     <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-primary" />
-                      <span>Internal ID: <span className="font-mono text-xs bg-muted p-1 rounded">{booking.id.substring(0,8)}...</span></span>
-                    </div>
                   </CardContent>
+                  <CardFooter className="flex justify-end gap-3 pt-4 border-t border-border/50">
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`tel:${WHATSAPP_PHONE_NUMBER}`}>
+                        <Phone className="mr-2 h-4 w-4" /> Call Us
+                      </a>
+                    </Button>
+                    <Button asChild variant="default" size="sm" className="bg-green-500 hover:bg-green-600 text-white">
+                      <a href={`https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${generateWhatsAppMessage(booking)}`} target="_blank" rel="noopener noreferrer">
+                        <MessageSquare className="mr-2 h-4 w-4" /> Chat on WhatsApp
+                      </a>
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -183,4 +201,6 @@ export default function UserDashboardPage() {
     </div>
   );
 }
+    
+
     
