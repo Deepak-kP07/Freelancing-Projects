@@ -1,7 +1,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Linkedin, Instagram, Mail } from 'lucide-react'; // Removed unused Globe
+import { Github, Linkedin, Instagram, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -38,11 +38,11 @@ export default function DeveloperPage() {
             <p className="text-lg text-accent font-medium">{developer.title}</p>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="text-foreground/80 text-lg space-y-3"> {/* Adjusted space-y for closer paragraphs */}
+            <div className="text-foreground/80 text-lg space-y-3">
               {developer.bio && typeof developer.bio === 'string'
                 ? developer.bio.split('\n').map((paragraph, index) => (
-                    <p key={index} className="text-left md:text-center">
-                      {paragraph.trim() === '' ? '\u00A0' : paragraph} {/* Render non-breaking space for empty lines */}
+                    <p key={index} className="text-left">
+                      {paragraph.trim() === '' ? '\u00A0' : paragraph}
                     </p>
                   ))
                 : null}
