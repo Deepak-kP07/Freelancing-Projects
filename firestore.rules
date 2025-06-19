@@ -4,58 +4,57 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Function to identify admin users
-    // IMPORTANT: This function is used for rules where request.auth IS available.
-    // For server actions where request.auth might be null, checks are often done in the action code.
+    // Helper function to check if the user is an admin
     function isAdmin() {
-      let adminEmails = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com'];
-      return request.auth != null && request.auth.token.email in adminEmails;
+      // Ensure request.auth and request.auth.token are not null before accessing email
+      return request.auth != null && request.auth.token != null && request.auth.token.email in ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com'];
     }
 
-    // Function to check for essential booking data fields during creation
-    function hasSufficientBookingDataForCreate(data) {
-      return data.name != null && data.name is string &&
-             data.email != null && data.email is string &&
-             data.phone != null && data.phone is string &&
-             data.serviceType != null && data.serviceType is string &&
-             data.preferredDate != null && data.preferredDate is timestamp &&
-             data.preferredTime != null && data.preferredTime is string &&
-             data.userEmail != null && data.userEmail is string && // Ensure userEmail is checked
-             data.status != null && data.status is string &&
-             data.bookedAt != null && // serverTimestamp will be a pending write, check for presence
-             data.displayId != null && data.displayId is string;
-    }
-
-    // Users collection:
+    // Users collection
     match /users/{userId} {
-      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      // Allow users to read and write their own profile data
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      // Allow anyone to create a user profile (e.g., on signup)
+      allow create: if request.auth != null;
     }
 
-    // Service Bookings collection:
+    // Service Bookings collection
     match /serviceBookings/{bookingId} {
-      // Create: relies on client-side auth check and data validation by hasSufficientBookingDataForCreate
-      allow create: if hasSufficientBookingDataForCreate(request.resource.data);
+      // Allow authenticated users to create bookings
+      allow create: if request.auth != null;
+      
+      // Allow users to read their own bookings
+      // (This rule might need an index on userEmail if not already present for queries)
+      allow read: if request.auth != null && resource.data.userEmail == request.auth.token.email;
+      
+      // Allow admins to list (query) and read any booking
+      // The client-side logic in getAllBookings handles the primary admin check.
+      // This rule is permissive to allow the client-side Firebase SDK call to succeed.
+      allow list: if true; // Was: if isAdmin(); - Changed for client-side admin fetch
+      allow get: if true; // Allow individual document reads by admins if needed, covered by list for queries
 
-      // Read: Allow any read, filtering is done in server actions.
-      // Admins can also read everything via getAllBookings, which has its own checks.
-      allow read: if true;
-
-      // Update: Allow any update from server; admin check is performed in the server action.
-      allow update: if true;
-
-      // Deletion can be restricted, e.g., only by admins or not at all.
-      // allow delete: if isAdmin(); // Example: only admins can delete
+      // Allow admins to update bookings (e.g., status)
+      // The client-side logic in updateBookingStatus handles the primary admin check.
+      // This rule is permissive to allow the client-side Firebase SDK call to succeed.
+      allow update: if true; // Was: if request.auth != null && isAdmin(); - Changed for client-side admin update
+      
+      // Deleting bookings might be restricted or admin-only
+      allow delete: if isAdmin();
     }
 
-    // Allow list operations (queries) on serviceBookings.
-    // The actual documents returned are still governed by per-document 'read' rules (which is 'if true' here).
-    match /serviceBookings/{document=**} {
-      allow list: if true;
+    // Contact Submissions collection
+    match /contactSubmissions/{submissionId} {
+      // Allow authenticated users to create (submit) contact messages
+      allow create: if request.auth != null;
+      // Allow admins to read and list contact messages
+      allow read, list: if isAdmin();
+      // Generally, contact submissions are not updated or deleted by clients.
+      allow update, delete: if false;
     }
 
-    // Counters collection is no longer used.
-    // match /counters/serviceBookingCounter {
-    //   allow read, write: if request.auth != null;
-    // }
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

@@ -43,6 +43,15 @@ export type ServerBooking = BookingFormData & {
   preferredDate: Date; // Firestore Timestamp converted to Date
 };
 
+// Interface for Contact Form Data
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string; // Assuming subject is always present, adjust if optional
+  message: string;
+}
+
+
 const processBookingDoc = (docSnapshot: any): ServerBooking => {
     const data = docSnapshot.data();
     return {
@@ -207,3 +216,25 @@ export async function updateBookingStatus(
     return { success: false, message };
   }
 }
+
+// Function to save contact form submissions
+export async function saveContactMessage(
+  data: ContactFormData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const contactSubmissionsRef = collection(db, 'contactSubmissions');
+    await addDoc(contactSubmissionsRef, {
+      ...data,
+      submittedAt: serverTimestamp(),
+    });
+    console.log('Contact message saved to Firestore.');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving contact message to Firestore:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to save message due to a database error.',
+    };
+  }
+}
+
