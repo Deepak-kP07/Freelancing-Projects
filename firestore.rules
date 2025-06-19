@@ -5,56 +5,62 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // IMPORTANT: Ensure your actual admin email(s) are listed here.
-      let adminEmails = [
-        'tumbikarthik2797@gmail.com',
-        'deepakperumal09@gmail.com'
-        // Add other admin emails here, e.g., 'another.admin@example.com'
-      ];
+      // For client-side initiated actions where request.auth is available.
+      // This will NOT work reliably for server actions if request.auth is null when rules are evaluated.
+      let adminEmails = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com']; // Ensure this matches your ADMIN_EMAIL constant
       return request.auth != null && request.auth.token.email in adminEmails;
     }
 
-    // Function to check if essential booking data fields are present
-    // Ensure this matches the fields set in newBookingData in actions.ts
-    function hasRequiredBookingFields(data) {
-      return data.name != null &&
-             data.email != null && // This is the form email, which becomes userEmail in the booking
-             data.phone != null &&
-             data.serviceType != null &&
-             data.preferredDate != null && // Firestore Timestamp
-             data.preferredTime != null &&
-             data.userEmail != null &&     // This is the specific field for user's email for querying
-             data.status != null &&
-             data.displayId != null &&
-             // bookedAt is serverTimestamp, so not checked for presence here,
-             // but ensure it's part of the object sent to Firestore.
-             true; // Keep true at the end if all conditions are ANDed
+    // Function to check for essential fields in a new booking
+    function hasSufficientBookingDataForCreate(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.email is string && data.email.size() > 0 && 
+             data.phone is string && data.phone.size() > 0 &&
+             data.serviceType is string && data.serviceType.size() > 0 &&
+             data.preferredDate is timestamp && // Ensure server action sends it as a Firestore Timestamp
+             data.preferredTime is string && data.preferredTime.size() > 0 &&
+             data.userEmail is string && data.userEmail.size() > 0 && // This is the validated email from form, set by server action
+             data.status is string && data.status.size() > 0 &&
+             data.bookedAt != null && // This will be a serverTimestamp placeholder during rule evaluation
+             data.displayId is string && data.displayId.size() > 0;
     }
 
+    // Users collection:
+    // - A user can read, create, and update their own profile.
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Allow users to write to their own profile (e.g., update displayName, photoURL)
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Service Bookings collection:
     match /serviceBookings/{bookingId} {
-      // Admins can read any booking. Users can read their own bookings.
+      // CREATE:
+      // Allows creation if essential fields are present.
+      // The server action is responsible for setting these fields (including userEmail).
+      // Client-side logic in ServiceBookingForm.tsx should ensure only logged-in users
+      // can trigger this server action.
+      allow create: if hasSufficientBookingDataForCreate(request.resource.data);
+
+      // READ: Users can read their own bookings. Admins can read any booking.
+      // This relies on request.auth, which might be null for server actions.
+      // If read operations from server actions fail, this rule may need further adjustment.
       allow read: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
-      // Authenticated users can list (queries will be further filtered by server logic and read rules)
-      allow list: if request.auth != null;
 
-      // MODIFIED CREATE RULE:
-      // No longer checks request.auth directly for create.
-      // Relies on:
-      // 1. Client-side auth check before calling the server action.
-      // 2. Server action populating userEmail (and other fields) correctly.
-      // 3. This rule checking for the presence of essential fields.
-      allow create: if hasRequiredBookingFields(request.resource.data);
-
-      // Only admins can update booking status
+      // UPDATE (e.g., status by admin):
+      // This relies on request.auth and isAdmin(), might be null for server actions.
+      // If update operations from server actions fail, this rule may need further adjustment.
       allow update: if request.auth != null && isAdmin();
-      // Only admins can delete bookings
-      allow delete: if request.auth != null && isAdmin();
+
+      // Deletion can be restricted, e.g., only by admins or not at all.
+      // allow delete: if request.auth != null && isAdmin();
     }
+
+    // LIST operation for queries (e.g., getUserBookings, getAllBookings)
+    // The documents returned are still subject to the per-document 'read' rule.
+    // This also relies on request.auth.
+    match /serviceBookings/{document=**} {
+      allow list: if request.auth != null;
+    }
+
+    // The '/counters/serviceBookingCounter' rule is no longer needed as ID generation changed.
   }
 }
