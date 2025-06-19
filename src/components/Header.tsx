@@ -68,8 +68,10 @@ export default function Header() {
               <span className="sr-only">Back</span>
             </Button>
           )}
-          <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-            <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={150} height={60} className='object-contain' data-ai-hint="water logo" />
+          <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors" onClick={closeMobileMenu}>
+            <div className="p-1 rounded-md dark:bg-white/5"> {/* Added wrapper for dark mode logo visibility */}
+              <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={150} height={60} className='object-contain' data-ai-hint="water logo" priority/>
+            </div>
           </Link>
         </div>
 
@@ -81,7 +83,7 @@ export default function Header() {
           <ThemeToggleButton />
           <CartIcon />
           <div className="hidden md:block">
-            <AuthButton />
+            <AuthButton onLinkClick={closeMobileMenu} />
           </div>
 
           <div className="md:hidden">
@@ -95,7 +97,9 @@ export default function Header() {
                 <SheetHeader className="pb-4 mb-4 border-b border-border">
                   <SheetTitle>
                     <Link href="/" className="flex items-center gap-2 text-primary" onClick={closeMobileMenu}>
-                       <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={120} height={48} className='object-contain' data-ai-hint="water logo" />
+                       <div className="p-1 rounded-md dark:bg-white/5"> {/* Added wrapper for dark mode logo visibility */}
+                         <Image src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/ozonxt-logo_y2gz8v.png" alt="Ozonxt Logo" width={120} height={48} className='object-contain' data-ai-hint="water logo" />
+                       </div>
                     </Link>
                   </SheetTitle>
                 </SheetHeader>
