@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useEffect, useState, useRef } // Added useRef
+import { useEffect, useState, useRef, startTransition } // Added startTransition
   from 'react';
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+// Removed useFormStatus as it's not appropriate for this button's pending state
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,8 +46,8 @@ const bookingSchema = z.object({
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+// Modified SubmitButton to accept 'pending' prop
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-auto" size="lg">
       {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
@@ -58,11 +58,12 @@ function SubmitButton() {
 
 export default function ServiceBookingForm() {
   const { toast } = useToast();
-  const [state, formAction, isPending] = useActionState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
+  // Renamed isPending to isActionPending for clarity
+  const [state, formAction, isActionPending] = useActionState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null); // Added form ref
+  const formRef = useRef<HTMLFormElement>(null);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -117,7 +118,7 @@ export default function ServiceBookingForm() {
     }
   }, [authUser, form]);
 
-  const onValidSubmit = (data: BookingFormData) => { // data is from RHF, not directly used here
+  const onValidSubmit = (data: BookingFormData) => {
     if (!authUser) {
       setIsLoginModalOpen(true);
       return;
@@ -125,16 +126,14 @@ export default function ServiceBookingForm() {
 
     if (formRef.current) {
       const formDataInstance = new FormData(formRef.current);
-      // Ensure all relevant RHF fields are actually in FormData
-      // For 'preferredDate', the hidden input handles it.
-      // For 'serviceType' (Select), ensure it has a 'name' attribute.
-      // For 'name', 'email', 'phone', 'preferredTime', `form.register` handles 'name'.
+      // formDataInstance will pick up values from named form elements.
+      // Hidden input for 'preferredDate' and 'name' attribute on 'Select' ensure these are included.
+      // Inputs registered with form.register() are also included.
       
-      // Log FormData for debugging if needed
-      // for (let [key, value] of formDataInstance.entries()) {
-      //   console.log(`${key}: ${value}`);
-      // }
-      formAction(formDataInstance);
+      // Wrap the call to formAction in startTransition
+      startTransition(() => {
+        formAction(formDataInstance);
+      });
     } else {
       console.error("ServiceBookingForm: formRef.current is null. Cannot create FormData.");
       toast({
@@ -165,10 +164,10 @@ export default function ServiceBookingForm() {
           </div>
         )}
         <form
-          ref={formRef} // Attach ref
-          onSubmit={form.handleSubmit(onValidSubmit)} // Use RHF handleSubmit
+          ref={formRef}
+          onSubmit={form.handleSubmit(onValidSubmit)}
           className="space-y-6"
-          id="service-booking-form" // ID can be kept if needed elsewhere
+          id="service-booking-form"
         >
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
@@ -194,7 +193,7 @@ export default function ServiceBookingForm() {
             <Select
               onValueChange={(value) => form.setValue('serviceType', value, { shouldValidate: true })}
               defaultValue={form.getValues('serviceType')}
-              name="serviceType" // Crucial: name attribute for FormData
+              name="serviceType" 
             >
               <SelectTrigger className={cn(form.formState.errors.serviceType || state?.errors?.serviceType ? 'border-destructive focus-visible:ring-destructive/50' : '')}>
                 <SelectValue placeholder="Select a service" />
@@ -210,7 +209,7 @@ export default function ServiceBookingForm() {
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="preferredDateTrigger" className="mb-1.5 block">Preferred Date</Label> {/* Changed htmlFor to avoid conflict with hidden input's id if it had one */}
+              <Label htmlFor="preferredDateTrigger" className="mb-1.5 block">Preferred Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -239,7 +238,6 @@ export default function ServiceBookingForm() {
                   />
                 </PopoverContent>
               </Popover>
-              {/* This hidden input is crucial for FormData construction */}
               <input
                 type="hidden"
                 name="preferredDate"
@@ -256,7 +254,7 @@ export default function ServiceBookingForm() {
           </div>
           
           <div className="pt-2">
-            <SubmitButton />
+            <SubmitButton pending={isActionPending} /> {/* Pass isActionPending here */}
           </div>
         </form>
       </CardContent>
@@ -280,5 +278,3 @@ export default function ServiceBookingForm() {
     </Card>
   );
 }
-
-    
