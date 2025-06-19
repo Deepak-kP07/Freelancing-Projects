@@ -179,7 +179,7 @@ export async function getUserBookings(userEmail: string): Promise<ServerBooking[
     if (errorCode === 'permission-denied' || errorCode === 'PERMISSION_DENIED') {
         detailMessage += " This often means 'request.auth' was null or Firestore rules don't allow users to read bookings where 'userEmail' matches their own (e.g., request.auth.token.email == resource.data.userEmail).";
     } else if (errorCode === 'failed-precondition' && errorMessage.toLowerCase().includes('index')) {
-        detailMessage += " This query requires a Firestore index. Your console logs should contain a direct link to create it in the Firebase console (e.g., for 'userEmail' (asc) and 'bookedAt' (desc) on the 'serviceBookings' collection). Please click that link and create the index.";
+        detailMessage += " This query requires a Firestore index. Your console logs should contain a direct link to create it. The index should be on the 'serviceBookings' collection for fields: 'userEmail' (Ascending) AND 'bookedAt' (Descending). Please go to your Firebase console -> Firestore Database -> Indexes, and create this composite index if it's missing or still building. It may take a few minutes to enable after creation.";
     }
     console.error("actions.ts - getUserBookings: Throwing error with detailed message:", detailMessage);
     throw new Error(detailMessage);
@@ -221,7 +221,7 @@ export async function getAllBookings(currentUserEmail: string | null | undefined
     if (errorCode === 'permission-denied' || errorCode === 'PERMISSION_DENIED') {
         detailedError += " This often means 'request.auth' was null for the admin user in Firestore rules, or the rules do not grant 'list' permission to admins (via isAdmin() in rules) for the 'serviceBookings' collection. Verify Firestore rules and ensure the admin user is properly authenticated when this action runs.";
     } else if (errorCode === 'failed-precondition' && errorMessage.toLowerCase().includes('index')) {
-        detailedError += " A Firestore index is required for this query. Your console logs should contain a direct link to create it in the Firebase console (usually on 'bookedAt' (desc) for 'serviceBookings' collection). Please click that link and create the index.";
+        detailedError += " A Firestore index is required for this query (likely on 'bookedAt' (desc) for the 'serviceBookings' collection for admin view). Your console logs or Firebase console should provide a link to create it. Please click that link and create the index. It may take a few minutes to enable.";
     }
     detailedError += " Ensure the isAdmin() function in your Firestore rules (Firebase Console -> Firestore -> Rules) correctly includes your admin email and allows 'list' and 'read' operations on 'serviceBookings'. Also check server logs (terminal or Firebase Functions logs) for specific Firebase errors (e.g., missing indexes).";
     console.error("getAllBookings: Returning error object:", { error: detailedError });
@@ -268,3 +268,4 @@ export async function updateBookingStatus(
   }
 }
 
+    
