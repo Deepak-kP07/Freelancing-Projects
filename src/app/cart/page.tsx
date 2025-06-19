@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Trash2, Minus, Plus, ShoppingBag, ExternalLink } from 'lucide-react';
 import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
@@ -18,8 +19,10 @@ import { formatCurrencyINR } from '@/lib/utils';
 
 export default function CartPage() {
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
+  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -38,6 +41,20 @@ export default function CartPage() {
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleCheckout = () => {
+    if (!authUser) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to proceed with your order.",
+        variant: "destructive",
+        action: (
+          <Button onClick={() => router.push('/login')} variant="outline" size="sm">
+            Login
+          </Button>
+        ),
+      });
+      return;
+    }
+
     if (cartItems.length === 0) {
       toast({
         title: "Your cart is empty",
@@ -109,7 +126,7 @@ export default function CartPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="shadow-xl sticky top-24"> {/* Made summary sticky */}
+          <Card className="shadow-xl sticky top-24">
             <CardHeader>
               <CardTitle className="text-xl font-headline">Order Summary</CardTitle>
             </CardHeader>

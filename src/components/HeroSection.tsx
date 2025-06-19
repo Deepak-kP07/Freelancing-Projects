@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section className="py-16 md:py-24 bg-background"> {/* Simplified background */}
+    <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
         <div className="text-center lg:text-left">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-bold text-foreground mb-6 leading-tight">
@@ -16,20 +16,19 @@ export default function HeroSection() {
             Your trusted partner for advanced water purification systems and services. Experience the difference with our cutting-edge ozone technology.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <Link href="/products" passHref>
-              <Button size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
+            <Button size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow" asChild>
+              <Link href="/products">
                 Explore Our Products <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/services" passHref>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                Book a Service
-              </Button>
-            </Link>
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              asChild
+            >
+              <Link href="/services">Book a Service</Link>
+            </Button>
           </div>
         </div>
         <div className="relative h-72 md:h-96 lg:h-[500px] rounded-xl overflow-hidden shadow-2xl group">
@@ -41,11 +40,9 @@ export default function HeroSection() {
             className="object-cover transform group-hover:scale-105 transition-transform duration-500"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div> {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
         </div>
       </div>
     </section>
   );
 }
-
-    

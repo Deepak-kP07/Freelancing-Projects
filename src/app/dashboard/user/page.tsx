@@ -87,7 +87,9 @@ export default function UserDashboardPage() {
 
   return (
     <div className="space-y-8 py-8">
-      <h1 className="text-3xl font-headline font-bold text-primary">Your Dashboard</h1>
+      <div className="w-full text-center md:text-left">
+        <h1 className="text-3xl font-headline font-bold text-primary">Your Dashboard</h1>
+      </div>
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -114,7 +116,7 @@ export default function UserDashboardPage() {
       </Card>
 
       <Card className="shadow-lg">
-        <CardHeader className="flex flex-row justify-between items-center">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           {error && !isLoadingBookings ? (
             <div className="flex-grow">
               <CardTitle className="flex items-center gap-2 text-xl text-destructive">
@@ -135,7 +137,7 @@ export default function UserDashboardPage() {
             </div>
           )}
           <Link href="/services" passHref>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <PlusCircle size={18} className="mr-2"/> {bookings.length > 0 ? 'Book Another Service' : 'Book New Service'}
             </Button>
           </Link>
@@ -180,13 +182,13 @@ export default function UserDashboardPage() {
                       <span>Name: {booking.name}</span>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end gap-3 pt-4 border-t border-border/50">
-                    <Button asChild variant="outline" size="sm">
+                  <CardFooter className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-border/50">
+                    <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                       <a href={`tel:${WHATSAPP_PHONE_NUMBER}`}>
                         <Phone className="mr-2 h-4 w-4" /> Call Us
                       </a>
                     </Button>
-                    <Button asChild variant="default" size="sm" className="bg-green-500 hover:bg-green-600 text-white">
+                    <Button asChild variant="default" size="sm" className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto">
                       <a href={`https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${generateWhatsAppMessage(booking)}`} target="_blank" rel="noopener noreferrer">
                         <MessageSquare className="mr-2 h-4 w-4" /> Chat on WhatsApp
                       </a>
@@ -201,6 +203,3 @@ export default function UserDashboardPage() {
     </div>
   );
 }
-    
-
-    

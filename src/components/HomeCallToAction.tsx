@@ -14,20 +14,19 @@ export default function HomeCallToAction() {
           Take the next step towards better water quality. Explore our solutions or get in touch with our experts today.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/products" passHref>
-            <Button size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
+          <Button size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow" asChild>
+            <Link href="/products">
               Explore Our Products <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <Link href="/contact" passHref>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              Contact Us
-            </Button>
-          </Link>
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            asChild
+          >
+            <Link href="/contact">Contact Us</Link>
+          </Button>
         </div>
       </div>
     </section>

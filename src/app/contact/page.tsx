@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Phone, Mail, Send, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { saveContactMessage } from '@/app/services/actions'; // To be created
+import { saveContactMessage } from '@/app/services/actions'; 
 import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
@@ -21,6 +21,10 @@ interface ContactFormData {
   subject: string;
   message: string;
 }
+
+const CONTACT_PAGE_ADDRESS = "1-22 Kapu Street Keelagaram (V), Naryanavanam (M) Tirupati, Andhra Pradesh, 517581";
+const CONTACT_PAGE_EMAIL = "ozonxt@gmail.com";
+// WHATSAPP_PHONE_NUMBER is already imported for the phone number
 
 export default function ContactPage() {
   const { toast } = useToast();
@@ -52,10 +56,9 @@ export default function ContactPage() {
       if (result.success) {
         toast({
           title: "Message Sent!",
-          description: "Your message has been submitted successfully.",
+          description: "Your message has been submitted successfully. We'll get back to you soon.",
         });
 
-        // Send WhatsApp notification
         let whatsappMessage = "New Contact Form Submission:\n\n";
         whatsappMessage += `Name: ${data.name}\n`;
         whatsappMessage += `Email: ${data.email}\n`;
@@ -64,7 +67,7 @@ export default function ContactPage() {
         whatsappMessage += `Submitted by: ${authUser.email}`;
 
         const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
-        window.open(whatsappUrl, '_blank'); // Opens in new tab
+        window.open(whatsappUrl, '_blank'); 
 
         (event.target as HTMLFormElement).reset();
       } else {
@@ -111,21 +114,21 @@ export default function ContactPage() {
                 <MapPin size={20} className="mr-3 mt-1 text-primary shrink-0" />
                 <div>
                   <h3 className="font-semibold text-foreground mb-0.5">Our Office Address</h3>
-                  <p className="text-muted-foreground">1-22 Kapu Street Keelagaram (V), Naryanavanam (M) Tirupati, Andhra Pradesh, 517581</p>
+                  <p className="text-muted-foreground">{CONTACT_PAGE_ADDRESS}</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Phone size={20} className="mr-3 text-primary shrink-0" />
                 <div>
                   <h3 className="font-semibold text-foreground mb-0.5">Phone Number</h3>
-                  <a href="tel:+919989263971" className="text-muted-foreground hover:text-primary">+91 9989263971</a>
+                  <a href={`tel:${WHATSAPP_PHONE_NUMBER}`} className="text-muted-foreground hover:text-primary">{WHATSAPP_PHONE_NUMBER.startsWith('+') ? WHATSAPP_PHONE_NUMBER : `+${WHATSAPP_PHONE_NUMBER}`}</a>
                 </div>
               </div>
               <div className="flex items-center">
                 <Mail size={20} className="mr-3 text-primary shrink-0" />
                 <div>
                   <h3 className="font-semibold text-foreground mb-0.5">Email Address</h3>
-                  <a href="mailto:ozonxt@gmail.com" className="text-muted-foreground hover:text-primary">ozonxt@gmail.com</a>
+                  <a href={`mailto:${CONTACT_PAGE_EMAIL}`} className="text-muted-foreground hover:text-primary">{CONTACT_PAGE_EMAIL}</a>
                 </div>
               </div>
                <div className="flex items-start pt-2">

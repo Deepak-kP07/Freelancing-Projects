@@ -31,9 +31,8 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
-import { createServiceBooking, type BookingFormData } from '@/app/services/actions'; // Import the new function and type
+import { createServiceBooking, type BookingFormData } from '@/app/services/actions';
 
-// Zod schema for client-side validation (matches the one in actions.ts for consistency)
 const bookingSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }).max(100, { message: 'Name must be 100 characters or less.' }),
   email: z.string().email({ message: 'Invalid email address.' }).max(100, { message: 'Email must be 100 characters or less.' }),
@@ -42,8 +41,6 @@ const bookingSchema = z.object({
   preferredDate: z.date({ required_error: "Please pick a date." }),
   preferredTime: z.string().min(1, { message: 'Please select a preferred time.' }),
 });
-
-// Type BookingFormData is imported from actions.ts
 
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
@@ -61,6 +58,7 @@ export default function ServiceBookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -148,7 +146,6 @@ export default function ServiceBookingForm() {
   
   const watchedPreferredDate = form.watch('preferredDate');
 
-
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl border-border">
       <CardHeader className="text-center">
@@ -213,7 +210,7 @@ export default function ServiceBookingForm() {
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="preferredDateTrigger" className="mb-1.5 block">Preferred Date</Label>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     id="preferredDateTrigger"
@@ -234,10 +231,11 @@ export default function ServiceBookingForm() {
                     selected={watchedPreferredDate}
                     onSelect={(date) => {
                         form.setValue('preferredDate', date as Date, {shouldValidate: true});
+                        setIsCalendarOpen(false); // Close popover on date select
                       }
                     }
                     initialFocus
-                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Prevent selection of past dates
+                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} 
                   />
                 </PopoverContent>
               </Popover>
