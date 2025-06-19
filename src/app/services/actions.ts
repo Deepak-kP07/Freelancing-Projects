@@ -96,25 +96,33 @@ export async function bookServiceAction(
 
   const newBookingData = {
     name,
-    email, 
+    email, // This is the validated form email, used for contact/display
     phone,
     serviceType,
-    preferredDate: Timestamp.fromDate(new Date(preferredDate)),
+    preferredDate: Timestamp.fromDate(new Date(preferredDate)), // Convert to Firestore Timestamp
     preferredTime,
-    displayId, // Use the generated random displayId
-    userEmail: email, 
-    status: SERVICE_STATUSES[0], 
-    bookedAt: serverTimestamp(), 
+    displayId,
+    userEmail: email, // This is the email for querying/ownership, should be the validated form email
+    status: SERVICE_STATUSES[0],
+    bookedAt: serverTimestamp(),
   };
 
+  // Detailed log of the data object before sending to Firestore
+  console.log("bookServiceAction: Final newBookingData before addDoc:", JSON.stringify({
+    ...newBookingData,
+    preferredDate: newBookingData.preferredDate.toDate().toISOString(), // Log preferredDate as ISO string for readability
+    // bookedAt is a serverTimestamp, so its actual value will be set by Firestore servers
+  }, null, 2));
+
+
   try {
-    console.log("bookServiceAction: Attempting to save booking to Firestore 'serviceBookings' collection for userEmail:", email);
+    console.log("bookServiceAction: Attempting to save booking to Firestore 'serviceBookings' collection. User email (for ownership):", newBookingData.userEmail, "Contact email (from form):", newBookingData.email);
     const docRef = await addDoc(collection(db, 'serviceBookings'), newBookingData);
-    console.log('bookServiceAction: New Booking Added to Firestore with Doc ID:', docRef.id, 'Display ID:', displayId, "for userEmail:", email);
+    console.log('bookServiceAction: New Booking Added to Firestore with Doc ID:', docRef.id, 'Display ID:', displayId, "for userEmail:", newBookingData.userEmail);
     return {
       message: `Service booked successfully! Your Booking ID is ${displayId}. We will contact you shortly to confirm.`,
       success: true,
-      bookingId: displayId, 
+      bookingId: displayId,
     };
   } catch (error: any) {
     console.error("!!! Unhandled error in bookServiceAction while adding document to 'serviceBookings' !!!", error);
@@ -122,7 +130,7 @@ export async function bookServiceAction(
     if (error.code) {
       userMessage = `A server error occurred: ${error.message} (Code: ${error.code}).`;
       if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED' || error.message?.toLowerCase().includes('permission')) {
-         userMessage += " This indicates a Firestore permission issue (e.g., 'request.auth' was null or rules for 'serviceBookings' collection are too restrictive for 'create'). Check Firestore rules and ensure the server action is running with user authentication context.";
+         userMessage += " This indicates a Firestore permission issue (e.g., 'request.auth' was null or rules for 'serviceBookings' collection are too restrictive for 'create'). Check Firestore rules and ensure the server action is running with user authentication context if rules require it, or that rules allow writes from server actions under specific conditions.";
       }
     }
     return { message: userMessage, success: false, errors: { _form: [userMessage] } };
@@ -180,6 +188,7 @@ export async function getUserBookings(userEmail: string): Promise<ServerBooking[
 
 async function isUserAdmin(currentUserEmail: string | null | undefined): Promise<boolean> {
   if (!currentUserEmail) return false;
+  // Ensure ADMIN_EMAIL is an array in your constants file
   return ADMIN_EMAIL.includes(currentUserEmail); 
 }
 
