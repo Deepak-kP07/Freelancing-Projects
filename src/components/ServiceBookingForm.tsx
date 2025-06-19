@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useRef, startTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,7 +31,9 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
+import { createServiceBooking, type BookingFormData } from '@/app/services/actions'; // Import the new function and type
 
+// Zod schema for client-side validation (matches the one in actions.ts for consistency)
 const bookingSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }).max(100, { message: 'Name must be 100 characters or less.' }),
   email: z.string().email({ message: 'Invalid email address.' }).max(100, { message: 'Email must be 100 characters or less.' }),
@@ -41,7 +43,7 @@ const bookingSchema = z.object({
   preferredTime: z.string().min(1, { message: 'Please select a preferred time.' }),
 });
 
-type BookingFormData = z.infer<typeof bookingSchema>;
+// Type BookingFormData is imported from actions.ts
 
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
@@ -105,31 +107,43 @@ export default function ServiceBookingForm() {
       return;
     }
     
-    const formDataInstance = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formDataInstance.entries());
-
-    // Get the actual Date object from RHF for preferredDate, as FormData stringifies it
-    const preferredDateValue = form.getValues('preferredDate');
-    const dataToLog = {
-      ...data,
-      preferredDate: preferredDateValue ? preferredDateValue.toISOString() : undefined, // Ensure date is logged in a consistent format
-    };
+    const formDataFromHook = form.getValues();
     
-    console.log('Service booking submitted with data:', dataToLog);
-    alert('Service booking request submitted! We will review your request.');
-    
-    // Simulate API call or further processing if needed for placeholder
-    // await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-    form.reset({
-        name: authUser?.displayName || '',
-        email: authUser?.email || '',
-        phone: '', 
-        serviceType: '', 
-        preferredDate: undefined, 
-        preferredTime: ''
-    });
-    setIsSubmitting(false);
+    try {
+      const result = await createServiceBooking(formDataFromHook, authUser.email);
+      if (result.success) {
+        toast({
+          title: "Booking Successful!",
+          description: result.message,
+          variant: 'default',
+        });
+        form.reset({
+            name: authUser?.displayName || '',
+            email: authUser?.email || '',
+            phone: '', 
+            serviceType: '', 
+            preferredDate: undefined, 
+            preferredTime: ''
+        });
+      } else {
+        setFormError(result.message);
+        toast({
+          title: "Booking Failed",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Service booking submission error:', error);
+      setFormError('An unexpected error occurred. Please try again.');
+      toast({
+        title: "Booking Error",
+        description: 'An unexpected error occurred. Please try again.',
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const watchedPreferredDate = form.watch('preferredDate');
@@ -223,7 +237,7 @@ export default function ServiceBookingForm() {
                       }
                     }
                     initialFocus
-                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))}
+                    disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Prevent selection of past dates
                   />
                 </PopoverContent>
               </Popover>
