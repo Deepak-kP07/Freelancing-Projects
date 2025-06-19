@@ -12,11 +12,9 @@ import {
   where,
   doc,
   updateDoc,
-  runTransaction,
   serverTimestamp,
   orderBy,
   Timestamp,
-  getCountFromServer,
 } from 'firebase/firestore';
 
 // Helper to preprocess date strings or Date objects into Date objects
@@ -63,48 +61,6 @@ export interface BookingFormState {
   bookingId?: string; // The displayId of the successfully created booking
 }
 
-const COUNTER_COLLECTION = 'counters';
-const SERVICE_BOOKING_COUNTER_DOC = 'serviceBookingCounter';
-
-// Generates the next user-friendly display ID for a booking (e.g., OZN0001)
-async function getNextBookingDisplayId(): Promise<{ displayId?: string; error?: string; rawError?: any }> {
-  const counterRef = doc(db, COUNTER_COLLECTION, SERVICE_BOOKING_COUNTER_DOC);
-  let newIdNumber = 1;
-  console.log(`getNextBookingDisplayId: Initiating operation for ${COUNTER_COLLECTION}/${SERVICE_BOOKING_COUNTER_DOC}`);
-
-  try {
-    await runTransaction(db, async (transaction) => {
-      console.log(`getNextBookingDisplayId: Transaction callback started.`);
-      const counterDoc = await transaction.get(counterRef);
-      if (!counterDoc.exists()) {
-        newIdNumber = 1;
-        console.log(`getNextBookingDisplayId: Counter doc doesn't exist. Setting initial ID: ${newIdNumber}. Attempting set.`);
-        transaction.set(counterRef, { currentId: newIdNumber });
-      } else {
-        newIdNumber = counterDoc.data().currentId + 1;
-        console.log(`getNextBookingDisplayId: Counter doc exists. New ID: ${newIdNumber}. Attempting update.`);
-        transaction.update(counterRef, { currentId: newIdNumber });
-      }
-    });
-    const displayId = `OZN${String(newIdNumber).padStart(4, '0')}`;
-    console.log(`getNextBookingDisplayId: Successfully generated Display ID: ${displayId}`);
-    return { displayId };
-
-  } catch (error: any) {
-    console.error("!!! Critical Error in getNextBookingDisplayId Transaction !!!");
-    console.error("Firestore transaction for booking ID generation FAILED.");
-    console.error("Error Code From Firestore:", error.code);
-    console.error("Error Message From Firestore:", error.message);
-    console.error("Full Firestore error object:", error);
-
-    let detailMessage = `Failed to generate booking ID. Firestore operation error: ${error.message} (Code: ${error.code}).`;
-    if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED' || error.message?.toLowerCase().includes('permission')) {
-        detailMessage += " This often means 'request.auth' was null when Firestore rules expected an authenticated user for the 'counters/serviceBookingCounter' document, or rules don't allow read/write on it. Check Firestore rules and ensure the server action is running with user authentication context.";
-    }
-    return { error: detailMessage, rawError: error };
-  }
-}
-
 // Server action to handle booking a service
 export async function bookServiceAction(
   prevState: BookingFormState | undefined,
@@ -134,18 +90,9 @@ export async function bookServiceAction(
   const { name, email, phone, serviceType, preferredDate, preferredTime } = validatedFields.data;
   console.log("bookServiceAction: Validation successful for user email from form:", email);
 
-  const idResult = await getNextBookingDisplayId();
-  if (idResult.error || !idResult.displayId) {
-    console.error('bookServiceAction: Failed to generate booking ID. Error from getNextBookingDisplayId:', idResult.error, "Raw Firestore error (if any):", idResult.rawError);
-    const errorMessage = idResult.error || 'Booking failed: Could not generate a booking ID. Please try again.';
-    return {
-      message: errorMessage,
-      errors: { _form: [errorMessage] },
-      success: false,
-    };
-  }
-  const displayId = idResult.displayId;
-  console.log("bookServiceAction: Successfully generated booking Display ID:", displayId);
+  // Generate a random display ID
+  const displayId = `OZN-${Date.now().toString(36).slice(-4)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
+  console.log("bookServiceAction: Generated random booking Display ID:", displayId);
 
   const newBookingData = {
     name,
@@ -154,7 +101,7 @@ export async function bookServiceAction(
     serviceType,
     preferredDate: Timestamp.fromDate(new Date(preferredDate)),
     preferredTime,
-    displayId,
+    displayId, // Use the generated random displayId
     userEmail: email, 
     status: SERVICE_STATUSES[0], 
     bookedAt: serverTimestamp(), 
@@ -311,4 +258,3 @@ export async function updateBookingStatus(
     return { success: false, message };
   }
 }
-
