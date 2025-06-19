@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -53,18 +54,18 @@ export default function TestimonialCarousel() {
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-4 bg-background/80 hover:bg-background rounded-full shadow-md"
+                className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 sm:-translate-x-2 md:-translate-x-4 bg-background/80 hover:bg-background rounded-full shadow-md z-10"
                 onClick={handlePrev}
               >
-                <ChevronLeft className="h-6 w-6 text-primary" />
+                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-4 bg-background/80 hover:bg-background rounded-full shadow-md"
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1 sm:translate-x-2 md:translate-x-4 bg-background/80 hover:bg-background rounded-full shadow-md z-10"
                 onClick={handleNext}
               >
-                <ChevronRight className="h-6 w-6 text-primary" />
+                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </Button>
             </>
           )}

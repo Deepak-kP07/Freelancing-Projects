@@ -94,8 +94,8 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map((item: CartItem) => (
-            <Card key={item.id} className="flex flex-col sm:flex-row items-center p-4 gap-4 shadow-md">
-              <div className="relative w-24 h-24 sm:w-20 sm:h-20 rounded-md overflow-hidden flex-shrink-0 mb-4 sm:mb-0">
+            <Card key={item.id} className="flex flex-col sm:flex-row items-center p-2 sm:p-4 gap-3 sm:gap-4 shadow-md">
+              <div className="relative w-20 h-20 sm:w-20 sm:h-20 rounded-md overflow-hidden flex-shrink-0 mb-2 sm:mb-0">
                 <Image src={item.imageUrl} alt={item.name} fill={true} className="object-cover" data-ai-hint={item.dataAiHint} />
               </div>
               <div className="flex-grow text-center sm:text-left">
