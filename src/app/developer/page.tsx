@@ -1,7 +1,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Linkedin, Instagram, Mail, Globe } from 'lucide-react';
+import { Github, Linkedin, Instagram, Mail } from 'lucide-react'; // Removed unused Globe
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -9,14 +9,13 @@ export default function DeveloperPage() {
   const developer = {
     name: "Deepak KP",
     title: "Full Stack Developer & AI Enthusiast",
-    bio: "I’m a web developer focused on turning real business needs into simple, effective digital solutions. This site is one of my recent works—built to support service-based businesses with clean design, smooth navigation, and user-friendly features. Currently gaining hands-on experience with modern tech stacks (React, Firebase, Node.js) and working at ZopKit—an AI-powered business ecosystem SaaS provider—where I learn how tech can drive business growth. Available for freelance projects, website builds, or any business inquiries—let’s work together to bring your ideas online.",
-    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750168169/WhatsApp_Image_2024-12-06_at_23.32.31_6c62872f_hcl6i6.jpg", // Replace with your actual image URL
+    bio: "I’m a web developer focused on turning real business needs into simple, effective digital solutions. This site is one of my recent works—built to support service-based businesses with clean design, smooth navigation, and user-friendly features.\nCurrently gaining hands-on experience with modern tech stacks (React, Firebase, Node.js) and working at ZopKit—an AI-powered business ecosystem SaaS provider—where I learn how tech can drive business growth.\nAvailable for freelance projects, website builds, or any business inquiries—let’s work together to bring your ideas online.",
+    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750168169/WhatsApp_Image_2024-12-06_at_23.32.31_6c62872f_hcl6i6.jpg",
     dataAiHint: "developer portrait",
     socialLinks: [
       { name: "GitHub", url: "https://github.com/Deepak-kP07", icon: Github },
-      { name: "LinkedIn", url: "https://www.linkedin.com/in/deepak-kp-559a85282/", icon: Linkedin }, // Replace with your LinkedIn
-      { name: "Instagram", url: "https://www.instagram.com/deepak_kp_7/", icon: Instagram}, // Replace with your Twitter
-      // { name: "Portfolio", url: "https://your-portfolio.com", icon: Globe }, // Replace with your portfolio
+      { name: "LinkedIn", url: "https://www.linkedin.com/in/deepak-kp-559a85282/", icon: Linkedin },
+      { name: "Instagram", url: "https://www.instagram.com/deepak_kp_7/", icon: Instagram },
     ],
     contactEmail: "deepakperumal09@gmail.com",
   };
@@ -39,9 +38,15 @@ export default function DeveloperPage() {
             <p className="text-lg text-accent font-medium">{developer.title}</p>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <p className="text-center text-foreground/80 text-lg">
-              {developer.bio}
-            </p>
+            <div className="text-foreground/80 text-lg space-y-3"> {/* Adjusted space-y for closer paragraphs */}
+              {developer.bio && typeof developer.bio === 'string'
+                ? developer.bio.split('\n').map((paragraph, index) => (
+                    <p key={index} className="text-left md:text-center">
+                      {paragraph.trim() === '' ? '\u00A0' : paragraph} {/* Render non-breaking space for empty lines */}
+                    </p>
+                  ))
+                : null}
+            </div>
             
             <div className="text-center">
               <h3 className="text-xl font-headline font-semibold text-primary mb-4">Connect with me</h3>
