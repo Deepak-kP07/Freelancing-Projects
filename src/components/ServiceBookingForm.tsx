@@ -1,10 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useRef, startTransition } // Added startTransition
-  from 'react';
-import { useActionState } from 'react';
-// Removed useFormStatus as it's not appropriate for this button's pending state
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,11 +26,11 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { bookServiceAction, type BookingFormState } from '@/app/services/actions';
 import { SERVICE_TYPES } from '@/lib/constants';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
+import type React from 'react';
 
 const bookingSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }).max(100, { message: 'Name must be 100 characters or less.' }),
@@ -46,7 +43,6 @@ const bookingSchema = z.object({
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
-// Modified SubmitButton to accept 'pending' prop
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-auto" size="lg">
@@ -58,12 +54,12 @@ function SubmitButton({ pending }: { pending: boolean }) {
 
 export default function ServiceBookingForm() {
   const { toast } = useToast();
-  // Renamed isPending to isActionPending for clarity
-  const [state, formAction, isActionPending] = useActionState<BookingFormState | undefined, FormData>(bookServiceAction, undefined);
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
+  // const formRef = useRef<HTMLFormElement>(null); // Not strictly needed if RHF handles data passing
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -78,36 +74,6 @@ export default function ServiceBookingForm() {
   });
 
   useEffect(() => {
-    if (state?.message) {
-      toast({
-        title: state.success ? 'Booking Successful!' : 'Booking Failed',
-        description: state.message,
-        variant: state.success ? 'default' : 'destructive',
-        duration: state.success ? 5000 : 7000,
-      });
-      if (state.success) {
-        form.reset({
-          name: authUser?.displayName || '',
-          email: authUser?.email || '',
-          phone: '', serviceType: '', preferredDate: undefined, preferredTime: ''
-        });
-      }
-    }
-    if (state?.errors) {
-        (Object.keys(state.errors) as Array<keyof BookingFormData | '_form'>).forEach((key) => {
-            const errorMessages = state.errors?.[key as keyof BookingFormData];
-             if (key === '_form' && state.errors?._form) {
-                // Form-wide errors are handled by the main toast
-            } else if (errorMessages && errorMessages.length > 0 && key !== '_form') {
-                 form.setError(key as keyof BookingFormData, { type: 'server', message: errorMessages.join(', ') });
-            }
-        });
-    }
-  }, [state, toast, form, authUser]);
-
-  const watchedPreferredDate = form.watch('preferredDate');
-
-  useEffect(() => {
     if (authUser) {
       if (authUser.displayName && !form.getValues('name')) {
         form.setValue('name', authUser.displayName, { shouldValidate: true });
@@ -118,31 +84,60 @@ export default function ServiceBookingForm() {
     }
   }, [authUser, form]);
 
-  const onValidSubmit = (data: BookingFormData) => {
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
+
     if (!authUser) {
       setIsLoginModalOpen(true);
       return;
     }
+    
+    setIsSubmitting(true);
 
-    if (formRef.current) {
-      const formDataInstance = new FormData(formRef.current);
-      // formDataInstance will pick up values from named form elements.
-      // Hidden input for 'preferredDate' and 'name' attribute on 'Select' ensure these are included.
-      // Inputs registered with form.register() are also included.
-      
-      // Wrap the call to formAction in startTransition
-      startTransition(() => {
-        formAction(formDataInstance);
-      });
-    } else {
-      console.error("ServiceBookingForm: formRef.current is null. Cannot create FormData.");
+    const isValid = await form.trigger(); // Trigger validation for all RHF fields
+    if (!isValid) {
       toast({
-        title: "Form Submission Error",
-        description: "An unexpected error occurred while submitting the form. Please try again.",
-        variant: "destructive",
+        title: "Validation Error",
+        description: "Please correct the errors in the form.",
+        variant: "destructive"
       });
+      setIsSubmitting(false);
+      return;
     }
+    
+    // If RHF validation passes, extract data using FormData as per prompt
+    const formData = new FormData(event.currentTarget);
+    const rawData = Object.fromEntries(formData.entries());
+
+    // Get the actual Date object from RHF for preferredDate, as FormData stringifies it
+    const preferredDateValue = form.getValues('preferredDate');
+    const dataToLog = {
+      ...rawData,
+      preferredDate: preferredDateValue ? preferredDateValue.toISOString() : undefined,
+    };
+    
+    console.log('Service booking submitted with data:', dataToLog);
+    alert('Service booking request submitted! We will review your request.');
+    // Here, you would typically make an API call to your backend (e.g., a Firebase Function)
+    // For now, it's just a console log and alert as per instructions.
+
+    // Example: Simulate API call
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+
+    form.reset({
+        name: authUser?.displayName || '',
+        email: authUser?.email || '',
+        phone: '', 
+        serviceType: '', 
+        preferredDate: undefined, 
+        preferredTime: ''
+    });
+    setIsSubmitting(false);
   };
+  
+  const watchedPreferredDate = form.watch('preferredDate');
 
 
   return (
@@ -154,38 +149,38 @@ export default function ServiceBookingForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="px-6 py-8 md:px-8">
-        {state?.errors?._form && (
+        {formError && (
           <div className="mb-6 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-sm text-destructive flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold mb-1">Booking Error</h4>
-              {state.errors._form.map((err, i) => <p key={i}>{err}</p>)}
+              <p>{formError}</p>
             </div>
           </div>
         )}
         <form
-          ref={formRef}
-          onSubmit={form.handleSubmit(onValidSubmit)}
+          onSubmit={handleSubmit} // Use the new client-side handleSubmit
           className="space-y-6"
           id="service-booking-form"
+          // ref={formRef} // formRef can be kept if needed for other direct DOM manipulations
         >
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="name" className="mb-1.5 block">Full Name</Label>
-              <Input id="name" {...form.register('name')} placeholder="e.g., John Doe" className={form.formState.errors.name || state?.errors?.name ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
-              {(form.formState.errors.name || state?.errors?.name) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.name?.message || state?.errors?.name?.[0]}</p>}
+              <Input id="name" {...form.register('name')} placeholder="e.g., John Doe" className={form.formState.errors.name ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
+              {form.formState.errors.name && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.name?.message}</p>}
             </div>
             <div>
               <Label htmlFor="email" className="mb-1.5 block">Email Address</Label>
-              <Input id="email" type="email" {...form.register('email')} placeholder="you@example.com" className={form.formState.errors.email || state?.errors?.email ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
-              {(form.formState.errors.email || state?.errors?.email) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.email?.message || state?.errors?.email?.[0]}</p>}
+              <Input id="email" type="email" {...form.register('email')} placeholder="you@example.com" className={form.formState.errors.email ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
+              {form.formState.errors.email && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.email?.message}</p>}
             </div>
           </div>
 
           <div>
             <Label htmlFor="phone" className="mb-1.5 block">Phone Number</Label>
-            <Input id="phone" type="tel" {...form.register('phone')} placeholder="e.g., +91 98765 43210" className={form.formState.errors.phone || state?.errors?.phone ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
-            {(form.formState.errors.phone || state?.errors?.phone) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.phone?.message || state?.errors?.phone?.[0]}</p>}
+            <Input id="phone" type="tel" {...form.register('phone')} placeholder="e.g., +91 98765 43210" className={form.formState.errors.phone ? 'border-destructive focus-visible:ring-destructive/50' : ''}/>
+            {form.formState.errors.phone && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.phone?.message}</p>}
           </div>
 
           <div>
@@ -195,7 +190,7 @@ export default function ServiceBookingForm() {
               defaultValue={form.getValues('serviceType')}
               name="serviceType" 
             >
-              <SelectTrigger className={cn(form.formState.errors.serviceType || state?.errors?.serviceType ? 'border-destructive focus-visible:ring-destructive/50' : '')}>
+              <SelectTrigger className={cn(form.formState.errors.serviceType ? 'border-destructive focus-visible:ring-destructive/50' : '')}>
                 <SelectValue placeholder="Select a service" />
               </SelectTrigger>
               <SelectContent>
@@ -204,7 +199,7 @@ export default function ServiceBookingForm() {
                 ))}
               </SelectContent>
             </Select>
-            {(form.formState.errors.serviceType || state?.errors?.serviceType) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.serviceType?.message || state?.errors?.serviceType?.[0]}</p>}
+            {form.formState.errors.serviceType && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.serviceType?.message}</p>}
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6">
@@ -218,7 +213,7 @@ export default function ServiceBookingForm() {
                     className={cn(
                       'w-full justify-start text-left font-normal h-11',
                       !watchedPreferredDate && 'text-muted-foreground',
-                      (form.formState.errors.preferredDate || state?.errors?.preferredDate) && 'border-destructive focus-visible:ring-destructive/50'
+                      (form.formState.errors.preferredDate) && 'border-destructive focus-visible:ring-destructive/50'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -238,23 +233,24 @@ export default function ServiceBookingForm() {
                   />
                 </PopoverContent>
               </Popover>
-              <input
+              {/* Hidden input for preferredDate for FormData if not using RHF data directly for submission */}
+              {/* <input
                 type="hidden"
-                name="preferredDate"
+                {...form.register('preferredDate')} // RHF will handle the Date object
                 value={watchedPreferredDate instanceof Date ? watchedPreferredDate.toISOString() : ''}
-              />
-              {(form.formState.errors.preferredDate || state?.errors?.preferredDate) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredDate?.message || state?.errors?.preferredDate?.[0]}</p>}
+              /> */}
+              {form.formState.errors.preferredDate && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredDate?.message}</p>}
             </div>
 
             <div>
               <Label htmlFor="preferredTime" className="mb-1.5 block">Preferred Time</Label>
-              <Input id="preferredTime" type="time" {...form.register('preferredTime')} className={cn('h-11', form.formState.errors.preferredTime || state?.errors?.preferredTime ? 'border-destructive focus-visible:ring-destructive/50' : '')}/>
-              {(form.formState.errors.preferredTime || state?.errors?.preferredTime) && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredTime?.message || state?.errors?.preferredTime?.[0]}</p>}
+              <Input id="preferredTime" type="time" {...form.register('preferredTime')} className={cn('h-11', form.formState.errors.preferredTime ? 'border-destructive focus-visible:ring-destructive/50' : '')}/>
+              {form.formState.errors.preferredTime && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredTime?.message}</p>}
             </div>
           </div>
           
           <div className="pt-2">
-            <SubmitButton pending={isActionPending} /> {/* Pass isActionPending here */}
+            <SubmitButton pending={isSubmitting} />
           </div>
         </form>
       </CardContent>

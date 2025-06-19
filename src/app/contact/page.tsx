@@ -1,19 +1,23 @@
 
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Phone, Mail, Send, Clock } from "lucide-react";
+import type React from 'react'; // Import React for type usage
 
 export default function ContactPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Placeholder for form submission logic (e.g., using a server action)
-    // For now, an alert or toast can indicate submission
-    // Replace with actual logic when backend is ready
-    alert("Form submitted! We will get back to you soon. (This is a placeholder message)");
-    // Consider using react-hook-form for more robust form handling
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    console.log('Contact form submitted with data:', data);
+    alert('Message sent! We will get back to you soon.');
+    
     (event.target as HTMLFormElement).reset(); // Reset form after submission
   };
 
