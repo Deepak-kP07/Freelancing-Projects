@@ -13,8 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, AlertTriangle, Loader2, Users, RefreshCcw, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Loader2, Users, RefreshCcw, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+
+const RECORDS_PER_PAGE = 10;
 
 export default function AdminDashboardPage() {
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -23,6 +25,7 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
@@ -40,7 +43,7 @@ export default function AdminDashboardPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAllBookings(authUser.email); // Pass admin email for server-side validation if needed
+      const result = await getAllBookings(authUser.email); 
       if ('error' in result) {
         let detailedError = `Failed to fetch bookings from database: ${result.error}.`;
         if (result.error.toLowerCase().includes("permission-denied") || result.error.toLowerCase().includes("request.auth")) {
@@ -62,20 +65,31 @@ export default function AdminDashboardPage() {
   }, [isAdmin, authUser]);
 
   useEffect(() => {
-    if (!authLoading) { // Only proceed if auth state is resolved
+    if (!authLoading) { 
         if (authUser && isAdmin) {
             fetchBookings();
         } else {
-            setIsLoading(false); // Stop loading as we won't fetch
+            setIsLoading(false); 
             let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
             if (authUser && !isAdmin) accessDeniedReason = "Access Denied: You do not have permission to view this page. Ensure your email is in ADMIN_EMAIL constant and your Firestore rules' isAdmin() function correctly identifies you as an admin.";
             else if (!authUser) accessDeniedReason = "Access Denied: You must be logged in to view this page.";
             setError(accessDeniedReason);
-            setBookings([]); // Clear any existing bookings
+            setBookings([]); 
             console.warn("AdminDashboard: Access denied. User:", authUser?.email, "Is admin (client-side):", isAdmin);
         }
     }
   }, [authLoading, isAdmin, authUser, fetchBookings]);
+
+  // Adjust current page if it becomes invalid after bookings data changes
+  useEffect(() => {
+    const newTotalPages = Math.ceil(bookings.length / RECORDS_PER_PAGE);
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    } else if (newTotalPages === 0 && bookings.length === 0 && currentPage !== 1) {
+      // Reset to page 1 if all bookings are cleared or no bookings exist
+      setCurrentPage(1);
+    }
+  }, [bookings, currentPage]);
 
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
@@ -112,17 +126,37 @@ export default function AdminDashboardPage() {
     return 'outline';
  };
 
+  // Pagination calculations
+  const totalPages = Math.ceil(bookings.length / RECORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = startIndex + RECORDS_PER_PAGE;
+  const currentBookings = bookings.slice(startIndex, endIndex);
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleRefreshBookings = () => {
+    setCurrentPage(1);
+    fetchBookings();
+  };
+
+
   if (authLoading || (isLoading && !error && (!authUser || !isAdmin))) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
-  if (error && !isLoading) { // Display error only if not loading
+  if (error && !isLoading) { 
      return (
       <div className="text-center py-12">
         <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">{error.startsWith("Access Denied") ? "Access Denied" : "Error Loading Bookings"}</h1>
         <p className="text-destructive px-4 whitespace-pre-wrap">{error}</p>
-        {!error.startsWith("Access Denied") && <Button onClick={fetchBookings} className="mt-4">Try Again</Button>}
+        {!error.startsWith("Access Denied") && <Button onClick={handleRefreshBookings} className="mt-4">Try Again</Button>}
       </div>
     );
   }
@@ -133,7 +167,7 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl font-headline font-bold text-primary flex items-center gap-2">
             <ShieldCheck className="h-8 w-8"/> Admin Dashboard
         </h1>
-        <Button variant="outline" onClick={fetchBookings} disabled={isLoading}>
+        <Button variant="outline" onClick={handleRefreshBookings} disabled={isLoading}>
             <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Bookings
         </Button>
       </div>
@@ -157,58 +191,85 @@ export default function AdminDashboardPage() {
             </div>
           )}
           {!isLoading && !error && bookings.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Booking ID</TableHead>
-                  <TableHead className="w-[150px]">Booked At</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Preferred Date</TableHead>
-                  <TableHead className="w-[180px]">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-mono text-xs">{booking.displayId}</TableCell>
-                    <TableCell className="text-xs">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
-                    <TableCell>
-                      <div className="font-medium">{booking.name}</div>
-                      <div className="text-xs text-muted-foreground">{booking.email}</div>
-                      <div className="text-xs text-muted-foreground">{booking.phone}</div>
-                    </TableCell>
-                    <TableCell>{booking.serviceType}</TableCell>
-                    <TableCell>{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={booking.status}
-                          onValueChange={(newStatus) => handleStatusChange(booking.id, newStatus)}
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Set status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SERVICE_STATUSES.map(status => (
-                              <SelectItem key={status} value={status} className="text-xs">
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap hidden sm:inline-flex">{booking.status}</Badge>
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Booking ID</TableHead>
+                    <TableHead className="w-[150px]">Booked At</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Preferred Date</TableHead>
+                    <TableHead className="w-[180px]">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {currentBookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell className="font-mono text-xs">{booking.displayId}</TableCell>
+                      <TableCell className="text-xs">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{booking.name}</div>
+                        <div className="text-xs text-muted-foreground">{booking.email}</div>
+                        <div className="text-xs text-muted-foreground">{booking.phone}</div>
+                      </TableCell>
+                      <TableCell>{booking.serviceType}</TableCell>
+                      <TableCell>{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={booking.status}
+                            onValueChange={(newStatus) => handleStatusChange(booking.id, newStatus)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Set status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SERVICE_STATUSES.map(status => (
+                                <SelectItem key={status} value={status} className="text-xs">
+                                  {status}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap hidden sm:inline-flex">{booking.status}</Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {totalPages > 0 && (
+                <div className="flex justify-between items-center mt-6 pt-4 border-t">
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    
