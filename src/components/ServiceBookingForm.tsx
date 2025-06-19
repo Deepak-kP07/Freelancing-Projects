@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,10 +56,9 @@ export default function ServiceBookingForm() {
   const { toast } = useToast();
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
-  // const formRef = useRef<HTMLFormElement>(null); // Not strictly needed if RHF handles data passing
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -84,7 +83,6 @@ export default function ServiceBookingForm() {
     }
   }, [authUser, form]);
 
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
@@ -96,7 +94,7 @@ export default function ServiceBookingForm() {
     
     setIsSubmitting(true);
 
-    const isValid = await form.trigger(); // Trigger validation for all RHF fields
+    const isValid = await form.trigger(); 
     if (!isValid) {
       toast({
         title: "Validation Error",
@@ -107,24 +105,21 @@ export default function ServiceBookingForm() {
       return;
     }
     
-    // If RHF validation passes, extract data using FormData as per prompt
-    const formData = new FormData(event.currentTarget);
-    const rawData = Object.fromEntries(formData.entries());
+    const formDataInstance = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formDataInstance.entries());
 
     // Get the actual Date object from RHF for preferredDate, as FormData stringifies it
     const preferredDateValue = form.getValues('preferredDate');
     const dataToLog = {
-      ...rawData,
-      preferredDate: preferredDateValue ? preferredDateValue.toISOString() : undefined,
+      ...data,
+      preferredDate: preferredDateValue ? preferredDateValue.toISOString() : undefined, // Ensure date is logged in a consistent format
     };
     
     console.log('Service booking submitted with data:', dataToLog);
     alert('Service booking request submitted! We will review your request.');
-    // Here, you would typically make an API call to your backend (e.g., a Firebase Function)
-    // For now, it's just a console log and alert as per instructions.
-
-    // Example: Simulate API call
-    // await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Simulate API call or further processing if needed for placeholder
+    // await new Promise(resolve => setTimeout(resolve, 1000)); 
 
     form.reset({
         name: authUser?.displayName || '',
@@ -159,10 +154,9 @@ export default function ServiceBookingForm() {
           </div>
         )}
         <form
-          onSubmit={handleSubmit} // Use the new client-side handleSubmit
+          onSubmit={handleSubmit}
           className="space-y-6"
           id="service-booking-form"
-          // ref={formRef} // formRef can be kept if needed for other direct DOM manipulations
         >
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
@@ -233,12 +227,6 @@ export default function ServiceBookingForm() {
                   />
                 </PopoverContent>
               </Popover>
-              {/* Hidden input for preferredDate for FormData if not using RHF data directly for submission */}
-              {/* <input
-                type="hidden"
-                {...form.register('preferredDate')} // RHF will handle the Date object
-                value={watchedPreferredDate instanceof Date ? watchedPreferredDate.toISOString() : ''}
-              /> */}
               {form.formState.errors.preferredDate && <p className="text-sm text-destructive mt-1.5">{form.formState.errors.preferredDate?.message}</p>}
             </div>
 
