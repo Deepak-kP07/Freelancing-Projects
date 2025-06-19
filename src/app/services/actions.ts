@@ -47,7 +47,7 @@ export type ServerBooking = BookingFormData & {
 export interface ContactFormData {
   name: string;
   email: string;
-  subject: string; // Assuming subject is always present, adjust if optional
+  subject?: string; // Subject is now optional
   message: string;
 }
 
@@ -224,7 +224,7 @@ export async function saveContactMessage(
   try {
     const contactSubmissionsRef = collection(db, 'contactSubmissions');
     await addDoc(contactSubmissionsRef, {
-      ...data,
+      ...data, // Spread the data, subject will be included if present
       submittedAt: serverTimestamp(),
     });
     console.log('Contact message saved to Firestore.');

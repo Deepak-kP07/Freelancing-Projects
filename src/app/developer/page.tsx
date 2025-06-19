@@ -9,8 +9,8 @@ export default function DeveloperPage() {
   const developer = {
     name: "Deepak KP",
     title: "Full Stack Developer & AI Enthusiast",
-    bio: "Passionate about building innovative solutions with modern web technologies and exploring the frontiers of Artificial Intelligence. Let's connect and build something amazing!",
-    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750332421/Screenshot_2024-11-07-11-53-28-108_com.miui.gallery_r4z0cn.png ", // Replace with your actual image URL
+    bio: "I’m a web developer focused on turning real business needs into simple, effective digital solutions. This site is one of my recent works—built to support service-based businesses with clean design, smooth navigation, and user-friendly features. Currently gaining hands-on experience with modern tech stacks (React, Firebase, Node.js) and working at ZopKit—an AI-powered business ecosystem SaaS provider—where I learn how tech can drive business growth. Available for freelance projects, website builds, or any business inquiries—let’s work together to bring your ideas online.",
+    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750168169/WhatsApp_Image_2024-12-06_at_23.32.31_6c62872f_hcl6i6.jpg", // Replace with your actual image URL
     dataAiHint: "developer portrait",
     socialLinks: [
       { name: "GitHub", url: "https://github.com/Deepak-kP07", icon: Github },

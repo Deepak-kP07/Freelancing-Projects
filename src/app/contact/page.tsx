@@ -10,17 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Phone, Mail, Send, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { saveContactMessage } from '@/app/services/actions'; 
+import { saveContactMessage, type ContactFormData } from '@/app/services/actions'; 
 import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
 
 const CONTACT_PAGE_ADDRESS = "1-22 Kapu Street Keelagaram (V), Naryanavanam (M) Tirupati, Andhra Pradesh, 517581";
 const CONTACT_PAGE_EMAIL = "ozonxt@gmail.com";
@@ -47,11 +40,26 @@ export default function ContactPage() {
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formData.entries()) as ContactFormData;
+    const formElement = event.currentTarget;
+    const formData = new FormData(formElement);
+    
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const subjectValue = formData.get('subject') as string | null;
+    const message = formData.get('message') as string;
+
+    const dataToSend: ContactFormData = {
+      name,
+      email,
+      message,
+    };
+
+    if (subjectValue && subjectValue.trim() !== '') {
+      dataToSend.subject = subjectValue;
+    }
 
     try {
-      const result = await saveContactMessage(data);
+      const result = await saveContactMessage(dataToSend);
 
       if (result.success) {
         toast({
@@ -60,16 +68,16 @@ export default function ContactPage() {
         });
 
         let whatsappMessage = "New Contact Form Submission:\n\n";
-        whatsappMessage += `Name: ${data.name}\n`;
-        whatsappMessage += `Email: ${data.email}\n`;
-        whatsappMessage += `Subject: ${data.subject || 'N/A'}\n`;
-        whatsappMessage += `Message: ${data.message}\n\n`;
+        whatsappMessage += `Name: ${dataToSend.name}\n`;
+        whatsappMessage += `Email: ${dataToSend.email}\n`;
+        whatsappMessage += `Subject: ${dataToSend.subject || 'N/A'}\n`;
+        whatsappMessage += `Message: ${dataToSend.message}\n\n`;
         whatsappMessage += `Submitted by: ${authUser.email}`;
 
         const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
         window.open(whatsappUrl, '_blank'); 
 
-        (event.target as HTMLFormElement).reset();
+        formElement.reset();
       } else {
         setSubmitError(result.error || "Failed to send message. Please try again.");
         toast({
@@ -199,3 +207,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

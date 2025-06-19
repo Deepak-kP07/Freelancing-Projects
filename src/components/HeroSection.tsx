@@ -33,7 +33,7 @@ export default function HeroSection() {
         </div>
         <div className="relative h-72 md:h-96 lg:h-[500px] rounded-xl overflow-hidden shadow-2xl group">
            <Image
-            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/herosection_img_lkwyy8.jpg"
+            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750153579/Gemini_Generated_Image_kpthptkpthptkpth_u11jqk.png"
             alt="Clean water stream with Ozonxt product"
             fill={true}
             data-ai-hint="water purifier lifestyle"
