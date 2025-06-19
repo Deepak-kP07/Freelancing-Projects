@@ -20,6 +20,14 @@ export default function DeveloperPage() {
     contactEmail: "deepakperumal09@gmail.com",
   };
 
+  const bioParagraphs = developer.bio ? developer.bio.split('\n').map((paragraph, index) => {
+    const trimmedParagraph = paragraph.trim();
+    if (trimmedParagraph === '') {
+      return <p key={index} className="text-left">&nbsp;</p>; // Render non-breaking space for empty lines
+    }
+    return <p key={index} className="text-left">{trimmedParagraph}</p>;
+  }) : null;
+
   return (
     <div className="py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-3xl">
@@ -38,15 +46,11 @@ export default function DeveloperPage() {
             <p className="text-lg text-accent font-medium">{developer.title}</p>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="text-foreground/80 text-lg space-y-3">
-              {developer.bio && typeof developer.bio === 'string'
-                ? developer.bio.split('\n').map((paragraph, index) => (
-                    <p key={index} className="text-left">
-                      {paragraph.trim() === '' ? '\u00A0' : paragraph}
-                    </p>
-                  ))
-                : null}
-            </div>
+            {bioParagraphs && (
+              <div className="text-foreground/80 text-base space-y-3">
+                {bioParagraphs}
+              </div>
+            )}
             
             <div className="text-center">
               <h3 className="text-xl font-headline font-semibold text-primary mb-4">Connect with me</h3>
