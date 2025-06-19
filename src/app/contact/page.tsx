@@ -189,7 +189,7 @@ export default function ContactPage() {
         
         <div className="mt-16 md:mt-24 rounded-xl overflow-hidden shadow-xl h-80 md:h-[500px] border border-border">
           <img 
-            src="https://placehold.co/1200x500.png" 
+            src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750333613/Generated_Image_June_19_2025_-_4_57PM_vbpsuf.jpg" 
             alt="Map showing Ozonxt location" 
             data-ai-hint="city map office" 
             className="w-full h-full object-cover" 

@@ -10,7 +10,7 @@ export default function DeveloperPage() {
     name: "Deepak KP",
     title: "Full Stack Developer & AI Enthusiast",
     bio: "Passionate about building innovative solutions with modern web technologies and exploring the frontiers of Artificial Intelligence. Let's connect and build something amazing!",
-    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750168169/WhatsApp_Image_2024-12-06_at_23.32.31_6c62872f_hcl6i6.jpg ", // Replace with your actual image URL
+    imageUrl: "https://res.cloudinary.com/dckm1rzyh/image/upload/v1750332421/Screenshot_2024-11-07-11-53-28-108_com.miui.gallery_r4z0cn.png ", // Replace with your actual image URL
     dataAiHint: "developer portrait",
     socialLinks: [
       { name: "GitHub", url: "https://github.com/Deepak-kP07", icon: Github },

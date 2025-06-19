@@ -33,14 +33,6 @@ const sourceCodePro = Source_Code_Pro({
 export const metadata: Metadata = {
   title: 'Ozonxt',
   description: 'Pure Water, Pure Life with Ozonxt',
-  // icons: { // Next.js 13+ App Router way to define icons
-  //   icon: '/favicon.ico', 
-  //   // apple: '/apple-icon.png', // Example for Apple touch icon
-  //   // other: [ // Example for other icons
-  //   //   { rel: 'icon', url: '/favicon-16x16.png', sizes: '16x16' },
-  //   //   { rel: 'icon', url: '/favicon-32x32.png', sizes: '32x32' },
-  //   // ],
-  // },
 };
 
 export default function RootLayout({
@@ -59,7 +51,7 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider
               attribute="class"
-              defaultTheme="system"
+              defaultTheme="light"
               enableSystem
               disableTransitionOnChange
             >
