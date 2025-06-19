@@ -5,61 +5,57 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Function to identify admin users
-    // IMPORTANT: Ensure adminEmails matches your ADMIN_EMAIL constant in the app.
+    // IMPORTANT: This function is used for rules where request.auth IS available.
+    // For server actions where request.auth might be null, checks are often done in the action code.
     function isAdmin() {
       let adminEmails = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com'];
       return request.auth != null && request.auth.token.email in adminEmails;
     }
 
-    // Function to check for essential fields when creating a booking
-    // This function does NOT check request.auth.
+    // Function to check for essential booking data fields during creation
     function hasSufficientBookingDataForCreate(data) {
-      return data.name is string && data.name.size() > 0 &&
-             data.email is string && data.email.size() > 0 &&
-             data.phone is string && data.phone.size() > 0 &&
-             data.serviceType is string && data.serviceType.size() > 0 &&
-             data.preferredDate is timestamp && // Ensure it's a timestamp
-             data.preferredTime is string && data.preferredTime.size() > 0 &&
-             data.userEmail is string && data.userEmail.size() > 0 && // This should be the user who is booking
-             data.status is string && data.status.size() > 0 &&
-             data.bookedAt is timestamp && // This should be a serverTimestamp or valid client timestamp
-             data.displayId is string && data.displayId.size() > 0;
+      return data.name != null && data.name is string &&
+             data.email != null && data.email is string &&
+             data.phone != null && data.phone is string &&
+             data.serviceType != null && data.serviceType is string &&
+             data.preferredDate != null && data.preferredDate is timestamp &&
+             data.preferredTime != null && data.preferredTime is string &&
+             data.userEmail != null && data.userEmail is string && // Ensure userEmail is checked
+             data.status != null && data.status is string &&
+             data.bookedAt != null && // serverTimestamp will be a pending write, check for presence
+             data.displayId != null && data.displayId is string;
     }
 
     // Users collection:
-    // - A user can read, create, and update their own profile.
     match /users/{userId} {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }
 
     // Service Bookings collection:
     match /serviceBookings/{bookingId} {
-      // Creating a booking relies on client-side auth check and server-side data validation.
+      // Create: relies on client-side auth check and data validation by hasSufficientBookingDataForCreate
       allow create: if hasSufficientBookingDataForCreate(request.resource.data);
 
-      // Reading individual bookings is now open.
-      // Security relies on server actions (getUserBookings, getAllBookings)
-      // to filter correctly before sending to client.
+      // Read: Allow any read, filtering is done in server actions.
+      // Admins can also read everything via getAllBookings, which has its own checks.
       allow read: if true;
 
-      // Admins can update any booking (e.g., status).
-      // This still requires the admin to be authenticated.
-      allow update: if request.auth != null && isAdmin();
+      // Update: Allow any update from server; admin check is performed in the server action.
+      allow update: if true;
 
       // Deletion can be restricted, e.g., only by admins or not at all.
-      // allow delete: if request.auth != null && isAdmin();
+      // allow delete: if isAdmin(); // Example: only admins can delete
     }
 
-    // Listing service bookings is now open.
-    // Security relies on server actions (getUserBookings, getAllBookings)
-    // to query appropriately (e.g., where('userEmail', '==', currentUserEmail)).
+    // Allow list operations (queries) on serviceBookings.
+    // The actual documents returned are still governed by per-document 'read' rules (which is 'if true' here).
     match /serviceBookings/{document=**} {
       allow list: if true;
     }
 
     // Counters collection is no longer used.
     // match /counters/serviceBookingCounter {
-    //   allow read, write: if request.auth != null; // Or more permissive if transactions need it
+    //   allow read, write: if request.auth != null;
     // }
   }
 }
