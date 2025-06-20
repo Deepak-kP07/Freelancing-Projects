@@ -26,7 +26,7 @@ export default function UserDashboardPage() {
     if (authUser?.email) {
       setIsLoadingBookings(true);
       setError(null);
-      console.log(`UserDashboardPage: Calling getUserBookings for user: ${authUser.email}`);
+      // console.log(`UserDashboardPage: Calling getUserBookings for user: ${authUser.email}`);
       getUserBookings(authUser.email)
         .then(data => {
           setBookings(data);
@@ -41,7 +41,7 @@ export default function UserDashboardPage() {
     } else if (!authLoading && !authUser) {
       setIsLoadingBookings(false);
       setError("Please log in to view your dashboard.");
-      console.log("UserDashboardPage: No authenticated user found. Auth loading state:", authLoading);
+      // console.log("UserDashboardPage: No authenticated user found. Auth loading state:", authLoading);
     }
   }, [authUser, authLoading]);
 
@@ -91,6 +91,7 @@ export default function UserDashboardPage() {
         <h1 className="text-3xl font-headline font-bold text-primary">Your Dashboard</h1>
       </div>
 
+      {/* Profile Information Card - Ensuring it's always visible */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">

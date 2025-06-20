@@ -45,7 +45,7 @@ export default function RootLayout({
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750429064/favicon_yy0hip.ico" sizes="any" />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <ReduxProvider>

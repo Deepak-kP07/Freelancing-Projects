@@ -86,8 +86,8 @@ export default function ContactPage() {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Contact form submission error:", error);
+    } catch (error: any) {
+      // console.error("Contact form submission error:", error); // Retaining for potential debugging if needed
       setSubmitError("An unexpected error occurred. Please try again later.");
       toast({
         title: "Error",
@@ -207,4 +207,3 @@ export default function ContactPage() {
     </div>
   );
 }
-

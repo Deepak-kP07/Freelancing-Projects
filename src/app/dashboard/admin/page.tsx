@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
         setBookings(result as ServerBooking[]);
       }
     } catch (err: any) {
-      console.error("Error fetching all bookings in AdminDashboardPage:", err);
+      // console.error("Error fetching all bookings in AdminDashboardPage:", err); // Retain for debugging
       setError(`Failed to load bookings. An unexpected error occurred: ${err.message || 'Unknown error'}.`);
       setBookings([]);
     } finally {
@@ -105,7 +105,7 @@ export default function AdminDashboardPage() {
         );
       }
     } catch (err) {
-      console.error("Error updating status:", err);
+      // console.error("Error updating status:", err); // Retain for debugging
       toast({
         title: 'Error',
         description: 'Failed to update booking status.',
