@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -25,40 +26,63 @@ service cloud.firestore {
 
     // Users collection:
     match /users/{userId} {
-      // An admin can read any user document. A user can only read their own.
-      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
-      // Only a user can create or update their own profile.
+      // A user can create or update their own document
       allow create, update: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Service Bookings collection:
-    match /serviceBookings/{bookingId} {
-      allow create: if hasSufficientBookingDataForCreate(request.resource.data);
-      allow read: if true;
-      allow update: if true;
-      // allow delete: if isAdmin();
+      
+      // A user can read their own document, and an admin can read ANY user document
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      
+      // An admin can list all users
+      allow list: if isAdmin();
     }
 
+    // Service Bookings collection:
+    match /serviceBookings/{bookingId} {
+      // Create: relies on client-side auth check and data validation by hasSufficientBookingDataForCreate
+      allow create: if hasSufficientBookingDataForCreate(request.resource.data);
+
+      // Read: Allow any read, filtering is done in server actions.
+      // Admins can also read everything via getAllBookings, which has its own checks.
+      allow read: if true;
+
+      // Update: Allow any update from server; admin check is performed in the server action.
+      allow update: if true;
+
+      // Deletion can be restricted, e.g., only by admins or not at all.
+      // allow delete: if isAdmin(); // Example: only admins can delete
+    }
+
+    // Allow list operations (queries) on serviceBookings.
+    // The actual documents returned are still governed by per-document 'read' rules (which is 'if true' here).
     match /serviceBookings/{document=**} {
       allow list: if true;
     }
 
-    // Contact Submissions collection
+    // NEW: Contact Submissions collection
     match /contactSubmissions/{submissionId} {
-      // Allow any authenticated user to create a contact submission with basic validation.
+      // Allow any authenticated user to create a contact submission
       allow create: if request.auth != null &&
                        request.resource.data.name is string &&
                        request.resource.data.email is string &&
                        request.resource.data.message is string &&
-                       (request.resource.data.subject == null || request.resource.data.subject is string) &&
-                       request.resource.data.submittedAt == request.time;
+                       (request.resource.data.subject == null || request.resource.data.subject is string) && // subject can be optional
+                       request.resource.data.submittedAt == request.time; // Ensure submittedAt is a server timestamp
 
-      // Allow only admins to read or list contact submissions.
+      // Allow only admins to read or list contact submissions
+      // This is a good practice if you plan to build an admin UI for these later.
+      // If no admin UI is planned, and no client ever needs to read them,
+      // you could restrict read/list further or even remove it.
       allow read: if isAdmin();
     }
-    
+
+    // Allow admins to list contact submissions
     match /contactSubmissions/{document=**} {
         allow list: if isAdmin();
     }
+
+    // Counters collection is no longer used.
+    // match /counters/serviceBookingCounter {
+    //   allow read, write: if request.auth != null;
+    // }
   }
 }
