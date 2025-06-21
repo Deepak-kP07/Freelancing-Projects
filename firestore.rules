@@ -4,45 +4,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if the requesting user is an admin
-    function isAdmin(request) {
-      // The ADMIN_EMAIL constant is an array in the app, so we check if the request auth email is in that list.
-      // NOTE: This list must be manually kept in sync with the one in src/lib/constants.ts
-      return request.auth.token.email in ['tumbikarthik2797@gmail.com', 'deepakperumal09@gmail.com'];
+    // Function to identify admin users
+    function isAdmin() {
+      let adminEmails = ['tumbikarthik2797@gmail.com','deepakperumal09@gmail.com'];
+      return request.auth != null && request.auth.token.email in adminEmails;
     }
 
-    // Rules for the 'users' collection
+    // Function to check for essential booking data fields during creation
+    function hasSufficientBookingDataForCreate(data) {
+      return data.name != null && data.name is string &&
+             data.email != null && data.email is string &&
+             data.phone != null && data.phone is string &&
+             data.serviceType != null && data.serviceType is string &&
+             data.preferredDate != null && data.preferredDate is timestamp &&
+             data.preferredTime != null && data.preferredTime is string &&
+             data.userEmail != null && data.userEmail is string && // Ensure userEmail is checked
+             data.status != null && data.status is string &&
+             data.bookedAt != null && // serverTimestamp will be a pending write, check for presence
+             data.displayId != null && data.displayId is string;
+    }
+
+    // Users collection:
     match /users/{userId} {
-      // Admins can list and read any user's profile. This is required for the admin dashboard.
-      allow list, read: if isAdmin(request);
+      // Admins can list all users and get any individual user document.
+      allow list, get: if isAdmin();
       
-      // A user can read and update their own profile.
-      allow read, update: if request.auth != null && request.auth.uid == userId;
-
-      // Only authenticated users can create their own profile entry.
-      // The user's UID must match the document ID they are trying to create.
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // A user can create their own document, and get/update their own document.
+      allow create, get, update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Rules for 'serviceBookings' collection
+    // Service Bookings collection:
     match /serviceBookings/{bookingId} {
-      // Admins can perform any action on bookings
-      allow read, list, update, delete: if isAdmin(request);
+      allow create: if hasSufficientBookingDataForCreate(request.resource.data);
+      allow read: if true;
+      allow update: if true;
+      // allow delete: if isAdmin();
+    }
 
-      // Authenticated users can create bookings
-      allow create: if request.auth != null;
-      
-      // Users can read bookings they created
-      allow read: if request.auth != null && resource.data.userEmail == request.auth.token.email;
+    // Allow list operations on serviceBookings.
+    match /serviceBookings/{document=**} {
+      allow list: if true;
     }
-    
-    // Rules for the 'contactSubmissions' collection
+
+    // NEW: Contact Submissions collection
     match /contactSubmissions/{submissionId} {
-      // Admins can read the contact submissions.
-      allow read, list: if isAdmin(request);
-      
-      // Any authenticated user can create a contact submission.
-      allow create: if request.auth != null;
+      // Allow any authenticated user to create a contact submission
+      // Basic validation for required fields
+      allow create: if request.auth != null &&
+                       request.resource.data.name is string &&
+                       request.resource.data.name.size() > 0 &&
+                       request.resource.data.email is string &&
+                       request.resource.data.email.size() > 0 &&
+                       request.resource.data.message is string &&
+                       request.resource.data.message.size() > 0 &&
+                       (request.resource.data.subject == null || request.resource.data.subject is string) && // subject can be optional
+                       request.resource.data.submittedAt == request.time; // Ensure submittedAt is a server timestamp
+
+      // Allow only admins to read contact submissions
+      allow read: if isAdmin();
     }
+
+    // Allow admins to list contact submissions
+    match /contactSubmissions/{document=**} {
+        allow list: if isAdmin();
+    }
+
   }
 }
