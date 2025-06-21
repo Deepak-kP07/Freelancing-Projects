@@ -214,11 +214,11 @@ export default function AdminDashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px] hidden md:table-cell">Booking ID</TableHead>
-                    <TableHead className="w-[150px] hidden lg:table-cell">Booked At</TableHead>
+                    <TableHead className="w-[100px]">Booking ID</TableHead>
+                    <TableHead className="w-[150px]">Booked At</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead className="hidden sm:table-cell">Service</TableHead>
-                    <TableHead className="hidden md:table-cell">Preferred Date</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Preferred Date</TableHead>
                     <TableHead className="w-[180px]">Status</TableHead>
                     <TableHead className="w-[150px]">Actions</TableHead>
                   </TableRow>
@@ -228,8 +228,8 @@ export default function AdminDashboardPage() {
                     const userInfo = userMap.get(booking.email);
                     return (
                       <TableRow key={booking.id}>
-                        <TableCell className="font-mono text-xs hidden md:table-cell">{booking.displayId}</TableCell>
-                        <TableCell className="text-xs hidden lg:table-cell">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
+                        <TableCell className="font-mono text-xs">{booking.displayId}</TableCell>
+                        <TableCell className="text-xs">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
@@ -243,8 +243,8 @@ export default function AdminDashboardPage() {
                               </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">{booking.serviceType}</TableCell>
-                        <TableCell className="hidden md:table-cell">{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
+                        <TableCell>{booking.serviceType}</TableCell>
+                        <TableCell>{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Select
@@ -262,19 +262,19 @@ export default function AdminDashboardPage() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap hidden xl:inline-flex">{booking.status}</Badge>
+                            <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap inline-flex">{booking.status}</Badge>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2">
+                          <div className="flex flex-row items-center gap-2">
+                            <Button asChild variant="outline" size="sm" className="px-2">
                               <a href={`tel:${booking.phone}`}>
-                                <Phone className="h-4 w-4" /> <span className="hidden sm:ml-1 sm:inline text-xs">Call</span>
+                                <Phone className="h-4 w-4" /> <span className="ml-1 text-xs">Call</span>
                               </a>
                             </Button>
-                            <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/30">
+                            <Button asChild variant="outline" size="sm" className="px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/30">
                               <a href={`https://wa.me/${booking.phone.startsWith('+') ? booking.phone : WHATSAPP_PHONE_NUMBER.substring(0,3) + booking.phone.replace(/[^0-9]/g, '')}?text=${generateAdminWhatsAppMessage(booking)}`} target="_blank" rel="noopener noreferrer">
-                                <MessageSquare className="h-4 w-4 text-green-600" /> <span className="hidden sm:ml-1 sm:inline text-xs text-green-700">Chat</span>
+                                <MessageSquare className="h-4 w-4 text-green-600" /> <span className="ml-1 text-xs text-green-700">Chat</span>
                               </a>
                             </Button>
                           </div>
