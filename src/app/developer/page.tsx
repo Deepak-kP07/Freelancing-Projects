@@ -23,8 +23,27 @@ export default function DeveloperPage() {
   const bioParagraphs = developer.bio ? developer.bio.split('\n').map((paragraph, index) => {
     const trimmedParagraph = paragraph.trim();
     if (trimmedParagraph === '') {
-      return <p key={index} className="text-left">&nbsp;</p>; // Render non-breaking space for empty lines
+      return <p key={index} className="text-left">&nbsp;</p>;
     }
+
+    // Check if the paragraph contains "ZopKit" to make it a link
+    if (trimmedParagraph.includes('ZopKit')) {
+      const parts = trimmedParagraph.split(/(ZopKit)/g); // Split by "ZopKit" but keep it in the array
+      return (
+        <p key={index} className="text-left">
+          {parts.map((part, i) =>
+            part === 'ZopKit' ? (
+              <Link key={i} href="https://zopkit.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                ZopKit
+              </Link>
+            ) : (
+              part
+            )
+          )}
+        </p>
+      );
+    }
+
     return <p key={index} className="text-left">{trimmedParagraph}</p>;
   }) : null;
 
