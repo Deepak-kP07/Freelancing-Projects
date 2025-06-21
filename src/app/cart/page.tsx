@@ -15,6 +15,16 @@ import { WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { formatCurrencyINR } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 export default function CartPage() {
@@ -24,6 +34,7 @@ export default function CartPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -42,16 +53,7 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!authUser) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to proceed with your order.",
-        variant: "destructive",
-        action: (
-          <Button onClick={() => router.push('/login')} variant="outline" size="sm">
-            Login
-          </Button>
-        ),
-      });
+      setIsLoginModalOpen(true);
       return;
     }
 
@@ -89,73 +91,92 @@ export default function CartPage() {
   }
 
   return (
-    <div className="py-8">
-      <h1 className="text-3xl font-headline font-semibold mb-8 text-primary text-center">Your Shopping Cart</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item: CartItem) => (
-            <Card key={item.id} className="flex flex-col sm:flex-row items-center p-2 sm:p-4 gap-3 sm:gap-4 shadow-md">
-              <div className="relative w-20 h-20 sm:w-20 sm:h-20 rounded-md overflow-hidden flex-shrink-0 mb-2 sm:mb-0">
-                <Image src={item.imageUrl} alt={item.name} fill={true} className="object-cover" data-ai-hint={item.dataAiHint} />
-              </div>
-              <div className="flex-grow text-center sm:text-left">
-                <h3 className="font-semibold text-lg">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">{formatCurrencyINR(item.price)} each</p>
-              </div>
-              <div className="flex items-center gap-2 my-2 sm:my-0">
-                <Button variant="outline" size="icon" onClick={() => handleQuantityChange(item.id, item.quantity - 1)}>
-                  <Minus className="h-4 w-4" />
+    <>
+      <div className="py-8">
+        <h1 className="text-3xl font-headline font-semibold mb-8 text-primary text-center">Your Shopping Cart</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            {cartItems.map((item: CartItem) => (
+              <Card key={item.id} className="flex flex-col sm:flex-row items-center p-2 sm:p-4 gap-3 sm:gap-4 shadow-md">
+                <div className="relative w-20 h-20 sm:w-20 sm:h-20 rounded-md overflow-hidden flex-shrink-0 mb-2 sm:mb-0">
+                  <Image src={item.imageUrl} alt={item.name} fill={true} className="object-cover" data-ai-hint={item.dataAiHint} />
+                </div>
+                <div className="flex-grow text-center sm:text-left">
+                  <h3 className="font-semibold text-lg">{item.name}</h3>
+                  <p className="text-sm text-muted-foreground">{formatCurrencyINR(item.price)} each</p>
+                </div>
+                <div className="flex items-center gap-2 my-2 sm:my-0">
+                  <Button variant="outline" size="icon" onClick={() => handleQuantityChange(item.id, item.quantity - 1)}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
+                    className="w-16 text-center"
+                    min="1"
+                  />
+                  <Button variant="outline" size="icon" onClick={() => handleQuantityChange(item.id, item.quantity + 1)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="font-semibold w-24 text-center sm:text-right">{formatCurrencyINR(item.price * item.quantity)}</p>
+                <Button variant="ghost" size="icon" onClick={() => dispatch(removeItem(item.id))} className="text-destructive hover:text-destructive/80">
+                  <Trash2 className="h-5 w-5" />
                 </Button>
-                <Input
-                  type="number"
-                  value={item.quantity}
-                  onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
-                  className="w-16 text-center"
-                  min="1"
-                />
-                <Button variant="outline" size="icon" onClick={() => handleQuantityChange(item.id, item.quantity + 1)}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="font-semibold w-24 text-center sm:text-right">{formatCurrencyINR(item.price * item.quantity)}</p>
-              <Button variant="ghost" size="icon" onClick={() => dispatch(removeItem(item.id))} className="text-destructive hover:text-destructive/80">
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
 
-        <div className="lg:col-span-1">
-          <Card className="shadow-xl sticky top-24">
-            <CardHeader>
-              <CardTitle className="text-xl font-headline">Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatCurrencyINR(totalAmount)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Shipping & Taxes</span>
-                <span>Calculated at next step</span>
-              </div>
-              <hr/>
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>{formatCurrencyINR(totalAmount)}</span>
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-3">
-              <Button onClick={handleCheckout} className="w-full bg-green-500 hover:bg-green-600 text-white">
-                Checkout with WhatsApp <ExternalLink className="ml-2 h-4 w-4"/>
-              </Button>
-              <Button variant="outline" onClick={() => dispatch(clearCart())} className="w-full">
-                Clear Cart
-              </Button>
-            </CardFooter>
-          </Card>
+          <div className="lg:col-span-1">
+            <Card className="shadow-xl sticky top-24">
+              <CardHeader>
+                <CardTitle className="text-xl font-headline">Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatCurrencyINR(totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Shipping & Taxes</span>
+                  <span>Calculated at next step</span>
+                </div>
+                <hr/>
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span>{formatCurrencyINR(totalAmount)}</span>
+                </div>
+              </CardContent>
+              <CardFooter className="flex-col gap-3">
+                <Button onClick={handleCheckout} className="w-full bg-green-500 hover:bg-green-600 text-white">
+                  Checkout with WhatsApp <ExternalLink className="ml-2 h-4 w-4"/>
+                </Button>
+                <Button variant="outline" onClick={() => dispatch(clearCart())} className="w-full">
+                  Clear Cart
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+      <AlertDialog open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Login Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please log in or create an account to proceed with your order. This helps us keep track of your order details.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0 pt-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="outline" onClick={() => { router.push('/signup'); setIsLoginModalOpen(false); }}>Sign Up</Button>
+            <AlertDialogAction asChild>
+              <Button onClick={() => { router.push('/login'); setIsLoginModalOpen(false); }}>Login</Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
