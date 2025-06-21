@@ -17,7 +17,7 @@ service cloud.firestore {
              data.serviceType != null && data.serviceType is string &&
              data.preferredDate != null && data.preferredDate is timestamp &&
              data.preferredTime != null && data.preferredTime is string &&
-             data.userEmail != null && data.userEmail is string && // Ensure userEmail is checked
+             data.userEmail != null && data.userEmail is string &&
              data.status != null && data.status is string &&
              data.bookedAt != null && // serverTimestamp will be a pending write, check for presence
              data.displayId != null && data.displayId is string;
@@ -25,9 +25,12 @@ service cloud.firestore {
 
     // Users collection:
     match /users/{userId} {
-      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      // An admin can read any user document. A user can only read their own.
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      // Only a user can create or update their own profile.
+      allow create, update: if request.auth != null && request.auth.uid == userId;
     }
-
+    
     // Service Bookings collection:
     match /serviceBookings/{bookingId} {
       allow create: if hasSufficientBookingDataForCreate(request.resource.data);
@@ -36,33 +39,26 @@ service cloud.firestore {
       // allow delete: if isAdmin();
     }
 
-    // Allow list operations on serviceBookings.
     match /serviceBookings/{document=**} {
       allow list: if true;
     }
 
-    // NEW: Contact Submissions collection
+    // Contact Submissions collection
     match /contactSubmissions/{submissionId} {
-      // Allow any authenticated user to create a contact submission
-      // Basic validation for required fields
+      // Allow any authenticated user to create a contact submission with basic validation.
       allow create: if request.auth != null &&
                        request.resource.data.name is string &&
-                       request.resource.data.name.size() > 0 &&
                        request.resource.data.email is string &&
-                       request.resource.data.email.size() > 0 &&
                        request.resource.data.message is string &&
-                       request.resource.data.message.size() > 0 &&
-                       (request.resource.data.subject == null || request.resource.data.subject is string) && // subject can be optional
-                       request.resource.data.submittedAt == request.time; // Ensure submittedAt is a server timestamp
+                       (request.resource.data.subject == null || request.resource.data.subject is string) &&
+                       request.resource.data.submittedAt == request.time;
 
-      // Allow only admins to read contact submissions
+      // Allow only admins to read or list contact submissions.
       allow read: if isAdmin();
     }
-
-    // Allow admins to list contact submissions
+    
     match /contactSubmissions/{document=**} {
         allow list: if isAdmin();
     }
-
   }
 }

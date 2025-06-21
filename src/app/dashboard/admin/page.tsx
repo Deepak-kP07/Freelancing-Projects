@@ -1,15 +1,16 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { getAllBookings, updateBookingStatus } from '@/app/services/actions';
-import type { ServerBooking } from '@/app/services/actions';
+import { getAllBookings, updateBookingStatus, getAllUsers } from '@/app/services/actions';
+import type { ServerBooking, ServerUser } from '@/app/services/actions';
 import { ADMIN_EMAIL, SERVICE_STATUSES, WHATSAPP_PHONE_NUMBER } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ export default function AdminDashboardPage() {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const authLoading = useSelector((state: RootState) => state.auth.loading);
   const [bookings, setBookings] = useState<ServerBooking[]>([]);
+  const [users, setUsers] = useState<ServerUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -29,7 +31,19 @@ export default function AdminDashboardPage() {
 
   const isAdmin = authUser?.email ? ADMIN_EMAIL.includes(authUser.email) : false;
 
-  const fetchBookings = useCallback(async () => {
+  const userMap = useMemo(() => {
+    const map = new Map<string, ServerUser>();
+    if (users.length > 0) {
+        users.forEach(user => {
+            if (user.email) {
+                map.set(user.email, user);
+            }
+        });
+    }
+    return map;
+  }, [users]);
+
+  const fetchAdminData = useCallback(async () => {
     if (!authUser || !isAdmin) {
         let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
         if (authUser && !isAdmin) accessDeniedReason = "Access Denied: You do not have permission to view this page.";
@@ -37,26 +51,39 @@ export default function AdminDashboardPage() {
         setError(accessDeniedReason);
         setIsLoading(false);
         setBookings([]);
+        setUsers([]);
         return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAllBookings(authUser.email); 
-      if ('error' in result) {
-        let detailedError = `Failed to fetch bookings: ${result.error}.`;
-         if (result.error.toLowerCase().includes("permission-denied")) {
-            detailedError += " This could be due to Firestore rules not granting 'list' access to admins.";
+        const [bookingsResult, usersResult] = await Promise.all([
+          getAllBookings(authUser.email),
+          getAllUsers(authUser.email),
+        ]);
+
+        if ('error' in bookingsResult) {
+            let detailedError = `Failed to fetch bookings: ${bookingsResult.error}.`;
+             if (bookingsResult.error.toLowerCase().includes("permission-denied")) {
+                detailedError += " This could be due to Firestore rules not granting 'list' access to admins.";
+            }
+            setError(detailedError);
+            setBookings([]);
+        } else {
+            setBookings(bookingsResult as ServerBooking[]);
         }
-        setError(detailedError);
-        setBookings([]);
-      } else {
-        setBookings(result as ServerBooking[]);
-      }
+
+        if ('error' in usersResult) {
+            setError(prev => prev ? `${prev}\n${usersResult.error}` : usersResult.error);
+            setUsers([]);
+        } else {
+            setUsers(usersResult as ServerUser[]);
+        }
+
     } catch (err: any) {
-      // console.error("Error fetching all bookings in AdminDashboardPage:", err); // Retain for debugging
-      setError(`Failed to load bookings. An unexpected error occurred: ${err.message || 'Unknown error'}.`);
+      setError(`Failed to load data. An unexpected error occurred: ${err.message || 'Unknown error'}.`);
       setBookings([]);
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +92,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!authLoading) { 
         if (authUser && isAdmin) {
-            fetchBookings();
+            fetchAdminData();
         } else {
             setIsLoading(false); 
             let accessDeniedReason = "Access Denied: You must be logged in as an admin to view this page.";
@@ -73,9 +100,10 @@ export default function AdminDashboardPage() {
             else if (!authUser) accessDeniedReason = "Access Denied: You must be logged in to view this page.";
             setError(accessDeniedReason);
             setBookings([]); 
+            setUsers([]);
         }
     }
-  }, [authLoading, isAdmin, authUser, fetchBookings]);
+  }, [authLoading, isAdmin, authUser, fetchAdminData]);
 
   useEffect(() => {
     const newTotalPages = Math.ceil(bookings.length / RECORDS_PER_PAGE);
@@ -105,7 +133,6 @@ export default function AdminDashboardPage() {
         );
       }
     } catch (err) {
-      // console.error("Error updating status:", err); // Retain for debugging
       toast({
         title: 'Error',
         description: 'Failed to update booking status.',
@@ -130,7 +157,7 @@ export default function AdminDashboardPage() {
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleRefreshBookings = () => {
     setCurrentPage(1);
-    fetchBookings();
+    fetchAdminData();
   };
   
   const generateAdminWhatsAppMessage = (booking: ServerBooking) => {
@@ -147,7 +174,7 @@ export default function AdminDashboardPage() {
      return (
       <div className="text-center py-12">
         <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">{error.startsWith("Access Denied") ? "Access Denied" : "Error Loading Bookings"}</h1>
+        <h1 className="text-2xl font-semibold mb-2">{error.startsWith("Access Denied") ? "Access Denied" : "Error Loading Data"}</h1>
         <p className="text-destructive px-4 whitespace-pre-wrap">{error}</p>
         {!error.startsWith("Access Denied") && <Button onClick={handleRefreshBookings} className="mt-4">Try Again</Button>}
       </div>
@@ -161,7 +188,7 @@ export default function AdminDashboardPage() {
             <ShieldCheck className="h-8 w-8"/> Admin Dashboard
         </h1>
         <Button variant="outline" onClick={handleRefreshBookings} disabled={isLoading} className="w-full sm:w-auto">
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Bookings
+            <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Data
         </Button>
       </div>
 
@@ -197,53 +224,64 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell className="font-mono text-xs hidden md:table-cell">{booking.displayId}</TableCell>
-                      <TableCell className="text-xs hidden lg:table-cell">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{booking.name}</div>
-                        <div className="text-xs text-muted-foreground">{booking.email}</div>
-                        <div className="text-xs text-muted-foreground">{booking.phone}</div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{booking.serviceType}</TableCell>
-                      <TableCell className="hidden md:table-cell">{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={booking.status}
-                            onValueChange={(newStatus) => handleStatusChange(booking.id, newStatus)}
-                          >
-                            <SelectTrigger className="h-8 text-xs w-full">
-                              <SelectValue placeholder="Set status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SERVICE_STATUSES.map(status => (
-                                <SelectItem key={status} value={status} className="text-xs">
-                                  {status}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap hidden xl:inline-flex">{booking.status}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                           <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2">
-                             <a href={`tel:${booking.phone}`}>
-                               <Phone className="h-4 w-4" /> <span className="hidden sm:ml-1 sm:inline text-xs">Call</span>
-                             </a>
-                           </Button>
-                           <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/30">
-                            <a href={`https://wa.me/${booking.phone.startsWith('+') ? booking.phone : WHATSAPP_PHONE_NUMBER.substring(0,3) + booking.phone.replace(/[^0-9]/g, '')}?text=${generateAdminWhatsAppMessage(booking)}`} target="_blank" rel="noopener noreferrer">
-                               <MessageSquare className="h-4 w-4 text-green-600" /> <span className="hidden sm:ml-1 sm:inline text-xs text-green-700">Chat</span>
-                             </a>
-                           </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {currentBookings.map((booking) => {
+                    const userInfo = userMap.get(booking.email);
+                    return (
+                      <TableRow key={booking.id}>
+                        <TableCell className="font-mono text-xs hidden md:table-cell">{booking.displayId}</TableCell>
+                        <TableCell className="text-xs hidden lg:table-cell">{format(new Date(booking.bookedAt), "dd MMM, yyyy HH:mm")}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                  <AvatarImage src={userInfo?.photoURL ?? undefined} alt={userInfo?.displayName ?? booking.name} />
+                                  <AvatarFallback>{booking.name.charAt(0).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                  <div className="font-medium">{booking.name}</div>
+                                  <div className="text-xs text-muted-foreground">{booking.email}</div>
+                                  <div className="text-xs text-muted-foreground">{booking.phone}</div>
+                              </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">{booking.serviceType}</TableCell>
+                        <TableCell className="hidden md:table-cell">{format(new Date(booking.preferredDate), 'dd MMM, yyyy')} at {booking.preferredTime}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={booking.status}
+                              onValueChange={(newStatus) => handleStatusChange(booking.id, newStatus)}
+                            >
+                              <SelectTrigger className="h-8 text-xs w-full">
+                                <SelectValue placeholder="Set status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {SERVICE_STATUSES.map(status => (
+                                  <SelectItem key={status} value={status} className="text-xs">
+                                    {status}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Badge variant={getStatusVariant(booking.status)} className="text-xs whitespace-nowrap hidden xl:inline-flex">{booking.status}</Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2">
+                              <a href={`tel:${booking.phone}`}>
+                                <Phone className="h-4 w-4" /> <span className="hidden sm:ml-1 sm:inline text-xs">Call</span>
+                              </a>
+                            </Button>
+                            <Button asChild variant="outline" size="icon" className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/30">
+                              <a href={`https://wa.me/${booking.phone.startsWith('+') ? booking.phone : WHATSAPP_PHONE_NUMBER.substring(0,3) + booking.phone.replace(/[^0-9]/g, '')}?text=${generateAdminWhatsAppMessage(booking)}`} target="_blank" rel="noopener noreferrer">
+                                <MessageSquare className="h-4 w-4 text-green-600" /> <span className="hidden sm:ml-1 sm:inline text-xs text-green-700">Chat</span>
+                              </a>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
               {totalPages > 1 && (
