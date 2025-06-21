@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,23 @@ const CONTACT_PAGE_EMAIL = "ozonxt@gmail.com";
 export default function ContactPage() {
   const { toast } = useToast();
   const authUser = useSelector((state: RootState) => state.auth.user);
+
+  // States for controlled form components
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Effect to auto-fill form when authUser is available or changes
+  useEffect(() => {
+    if (authUser) {
+        setName(authUser.displayName || '');
+        setEmail(authUser.email || '');
+    }
+  }, [authUser]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,22 +55,15 @@ export default function ContactPage() {
       return;
     }
 
-    const formElement = event.currentTarget;
-    const formData = new FormData(formElement);
-    
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const subjectValue = formData.get('subject') as string | null;
-    const message = formData.get('message') as string;
-
+    // Construct data from state
     const dataToSend: ContactFormData = {
       name,
       email,
       message,
     };
-
-    if (subjectValue && subjectValue.trim() !== '') {
-      dataToSend.subject = subjectValue;
+    
+    if (subject.trim()) {
+      dataToSend.subject = subject.trim();
     }
 
     try {
@@ -77,7 +85,9 @@ export default function ContactPage() {
         const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
         window.open(whatsappUrl, '_blank'); 
 
-        formElement.reset();
+        // Reset only subject and message fields, preserving auto-filled user data
+        setSubject('');
+        setMessage('');
       } else {
         setSubmitError(result.error || "Failed to send message. Please try again.");
         toast({
@@ -87,7 +97,6 @@ export default function ContactPage() {
         });
       }
     } catch (error: any) {
-      // console.error("Contact form submission error:", error); // Retaining for potential debugging if needed
       setSubmitError("An unexpected error occurred. Please try again later.");
       toast({
         title: "Error",
@@ -170,20 +179,20 @@ export default function ContactPage() {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="name" className="mb-1.5 block">Full Name</Label>
-                    <Input id="name" name="name" placeholder="Your Full Name" required disabled={isSubmitting} />
+                    <Input id="name" name="name" placeholder="Your Full Name" required disabled={isSubmitting} value={name} onChange={(e) => setName(e.target.value)} />
                   </div>
                   <div>
                     <Label htmlFor="email" className="mb-1.5 block">Email Address</Label>
-                    <Input id="email" name="email" type="email" placeholder="your.email@example.com" required disabled={isSubmitting} />
+                    <Input id="email" name="email" type="email" placeholder="your.email@example.com" required disabled={isSubmitting} value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="subject" className="mb-1.5 block">Subject</Label>
-                  <Input id="subject" name="subject" placeholder="Enquiry about..." disabled={isSubmitting} />
+                  <Input id="subject" name="subject" placeholder="Enquiry about..." disabled={isSubmitting} value={subject} onChange={(e) => setSubject(e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="message" className="mb-1.5 block">Message</Label>
-                  <Textarea id="message" name="message" placeholder="Your message here..." rows={5} required disabled={isSubmitting} />
+                  <Textarea id="message" name="message" placeholder="Your message here..." rows={5} required disabled={isSubmitting} value={message} onChange={(e) => setMessage(e.target.value)} />
                 </div>
                 <Button type="submit" className="w-full sm:w-auto" size="lg" disabled={isSubmitting || !authUser}>
                   {isSubmitting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Send size={18} className="mr-2" />}
