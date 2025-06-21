@@ -22,8 +22,7 @@ export default function AboutPage() {
           </div>
           <div className="relative h-80 md:h-[450px] rounded-xl overflow-hidden shadow-xl">
             <Image
-              src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750153579/Gemini_Generated_Image_kpthptkpthptkpth_u11jqk.png"
-              
+              src="https://res.cloudinary.com/dckm1rzyh/image/upload/v1750161199/herosection_img_lkwyy8.jpg"
               alt="Ozonxt team collaborating on water purification technology"
               fill={true}
               className="object-cover"
